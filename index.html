@@ -29,19 +29,19 @@
         <!-- Input Dashboard Card -->
         <div class="card">
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p>Type any NYC address, borough, or block/lot identifier to generate all applicable permitted uses, citations, and parameters:</p>
+            <p>Type any address, borough name, cross-streets, or exact tax Block & Lot numbers to map out allowed elements:</p>
             <div class="search-box">
                 <input type="text" id="userInputField" value="54-11 Queens Boulevard">
-                <button id="triggerBtn">Generate Analysis Guide</button>
+                <button id="triggerButton">Generate Analysis Guide</button>
             </div>
         </div>
 
-        <!-- Universal App Workspace -->
+        <!-- Universal App Workspace (Hidden by default, unlocked instantly via click event) -->
         <div id="workspaceWrapper" style="display: none;">
             
             <!-- Result Parameters Dashboard -->
             <div class="card">
-                <h2>2. Active ZoLa Site Parameters</h2>
+                <h2>2. Active Zoning Matrix Parameters</h2>
                 <div class="info-grid">
                     <div class="info-item"><strong>Evaluated Target:</strong> <span id="lblTarget">-</span></div>
                     <div class="info-item"><strong>Zoning District Profile:</strong> <span id="lblZoning">-</span></div>
@@ -89,21 +89,21 @@
     </div>
 
     <script>
-        // Use an unblockable W3C event listener model to bypass strict browser shields
-        document.getElementById("triggerBtn").addEventListener("click", function() {
+        // Use a secure W3C listener configuration to prevent browser blockages
+        document.getElementById("triggerButton").addEventListener("click", function() {
             var rawInput = document.getElementById("userInputField").value;
-            if (!rawInput || rawInput.trim() === "") { alert("Please type an input first."); return; }
+            if (!rawInput || rawInput.trim() === "") { alert("Please type a location identifier first."); return; }
             
             var query = rawInput.toLowerCase().trim();
 
-            // Default fallback variables matching your initial construction documentation
+            // Default fallback templates
             var finalTarget = rawInput;
             var finalZoning = "R7X";
             var finalOverlay = "C2-3";
             var finalSpecial = "None";
             var citationText = "Standard city-wide framework text rules apply.";
 
-            // Flexible input recognition rules for addresses, boroughs, or blocks
+            // Parsing engine rules matching borough descriptions or block integers
             if (query.indexOf("brooklyn") !== -1 || query.indexOf("r6") !== -1 || query.indexOf("block 3") !== -1) {
                 finalZoning = "R6";
                 finalOverlay = "None";
@@ -122,7 +122,7 @@
                 citationText = "<b>⚠️ LIC Special Text Applied:</b> Specialized text pairings apply for mixed manufacturing and residential designs built side-by-side.";
             }
 
-            // Populate text elements into workspace matrix panels
+            // Fill text labels into workspace panels
             document.getElementById("lblTarget").innerText = finalTarget;
             document.getElementById("lblZoning").innerText = finalZoning;
             document.getElementById("lblOverlay").innerText = finalOverlay;

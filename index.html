@@ -53,28 +53,27 @@
         </header>
 
         <div class="card">
-            <h2>1. Enter Property Tax Map Identifiers (BBL Code)</h2>
-            <p>Select a borough and type your target Block and Lot numbers below to process data:</p>
+            <h2>1. Enter Property Tax Map Identifiers (Pre-filled Sandbox Mode)</h2>
+            <p>The form fields are pre-loaded with your 54-11 Queens Boulevard parcel data. Click the button directly to check execution:</p>
             
             <div class="bbl-box">
                 <div>
                     <select id="boroughInput">
-                        <option value="" disabled selected>Select Borough...</option>
                         <option value="1">1 - Manhattan</option>
                         <option value="2">2 - Bronx</option>
                         <option value="3">3 - Brooklyn</option>
-                        <option value="4">4 - Queens</option>
+                        <option value="4" selected>4 - Queens</option>
                         <option value="5">5 - Staten Island</option>
                     </select>
                 </div>
                 <div>
-                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)">
+                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)" value="1323">
                 </div>
                 <div>
-                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)">
+                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)" value="44">
                 </div>
                 <div style="display: flex; align-items: flex-end;">
-                    <!-- SOLID ENGINE TRIGGER: Global function execution entry point completely independent of any background script loaders -->
+                    <!-- UNBLOCKABLE NATIVE EVENT TRIGGER: Fires directly from the browser window chassis -->
                     <button type="button" class="action-btn" onclick="runZoningAnalysisDashboard();">Run BBL Query</button>
                 </div>
             </div>

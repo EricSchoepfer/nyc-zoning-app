@@ -2,46 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC Pro Zoning BBL Analysis Tool</title>
     <style>
-        :root {
-            --primary-color: #1e3a8a;
-            --primary-light: #eff6ff;
-            --accent-color: #0d9488;
-            --text-main: #1f2937;
-            --text-muted: #4b5563;
-            --bg-main: #f3f4f6;
-            --border-color: #e5e7eb;
-            --mandatory-color: #ef4444;
-            --conditional-color: #f59e0b;
-        }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; }
+        body { font-family: Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-        header { background-color: var(--primary-color); color: white; padding: 20px 0; margin-bottom: 24px; text-align: center; border-radius: 6px; }
+        header { background-color: #1e3a8a; color: white; padding: 20px 0; margin-bottom: 24px; text-align: center; border-radius: 6px; }
         header h1 { margin: 0; font-size: 1.6rem; }
         .subtitle { margin: 4px 0 0 0; opacity: 0.85; font-size: 0.9rem; }
-        .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary-color); border-bottom: 2px solid var(--primary-light); padding-bottom: 6px; }
-        p { font-size: 0.85rem; color: var(--text-muted); margin-top: -4px; }
-        
+        .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; font-size: 1.2rem; color: #1e3a8a; border-bottom: 2px solid #eff6ff; padding-bottom: 6px; }
+        p { font-size: 0.85rem; color: #4b5563; margin-top: -4px; }
         .bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
-        select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
-        
-        button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
+        select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
+        button { background-color: #0d9488; color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
         button:hover { background-color: #0f766e; }
-        
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
         .info-item { padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem; }
-        .info-item strong { display: block; color: var(--primary-color); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
+        .info-item strong { display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
         table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; font-size: 0.85rem; }
-        th { background-color: var(--primary-light); color: var(--primary-color); padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
+        th { background-color: #eff6ff; color: #1e3a8a; padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
         td { padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; }
-        tr:hover { background-color: #f9fafb; }
-        
-        .metric-box { background-color: #fff; border: 2px solid var(--border-color); border-radius: 6px; padding: 15px; text-align: center; }
-        .metric-val { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
-        .metric-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: bold; }
+        .metric-box { background-color: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 15px; text-align: center; }
+        .metric-val { font-size: 1.4rem; font-weight: bold; color: #1e3a8a; margin-top: 5px; }
+        .metric-label { font-size: 0.75rem; text-transform: uppercase; color: #4b5563; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -52,37 +35,36 @@
             <p class="subtitle">Tax Lot BBL Data Engine: Live Allowed Uses & ZFA Calculator</p>
         </header>
 
-        <!-- Input Section -->
         <div class="card">
-            <h2>1. Property Tax Map Identifiers (Pre-filled Self-Test Mode)</h2>
-            <p>The form below contains data for your 54-11 Queens Boulevard lot sample. Click the button immediately to test execution:</p>
+            <h2>1. Enter Property Tax Map Identifiers (BBL Code)</h2>
+            <p>Select a borough and type your target Block and Lot numbers below to process data:</p>
             <div class="bbl-box">
                 <div>
                     <select id="boroughInput">
+                        <option value="" disabled selected>Select Borough...</option>
                         <option value="1">1 - Manhattan</option>
                         <option value="2">2 - Bronx</option>
                         <option value="3">3 - Brooklyn</option>
-                        <option value="4" selected>4 - Queens</option>
+                        <option value="4">4 - Queens</option>
                         <option value="5">5 - Staten Island</option>
                     </select>
                 </div>
                 <div>
-                    <input type="text" id="blockInput" placeholder="Block (e.g. 1323)" value="1323">
+                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)">
                 </div>
                 <div>
-                    <input type="text" id="lotInput" placeholder="Lot (e.g. 44)" value="44">
+                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)">
                 </div>
                 <div style="display: flex; align-items: flex-end;">
-                    <!-- SOLID EMBED: Standard, structural button trigger is hardwired directly to the core script loop -->
+                    <!-- NATIVE ONCLICK BUTTON: Bypasses modern script blocks completely via a direct document action -->
                     <button id="searchBtn" onclick="runZoningAnalysisDashboard();">Run BBL Query</button>
                 </div>
             </div>
         </div>
 
-        <!-- Workspace Elements (Hidden until clicked) -->
+        <!-- App Display Panels (Hidden until button is clicked) -->
         <div id="resultsWrapper" style="display: none;">
             
-            <!-- Result Parameters Dashboard -->
             <div class="card">
                 <h2>2. Active ZoLa Site Parameters (BBL Linked)</h2>
                 <div class="info-grid">
@@ -94,25 +76,23 @@
                 </div>
             </div>
 
-            <!-- Dynamic FAR Matrix Output Block -->
             <div class="card">
                 <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-                <p>Calculations scaled dynamically using official municipal lot area metrics.</p>
+                <p>Calculations scaled dynamically using baseline district multipliers.</p>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
-                    <div class="metric-box" style="border-left: 5px solid var(--primary-color);">
+                    <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
                         <div class="metric-label">Standard Baseline FAR</div>
                         <div class="metric-val" id="lblStdFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblStdMaxSf">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
                     </div>
-                    <div class="metric-box" style="border-left: 5px solid var(--accent-color);">
+                    <div class="metric-box" style="border-left: 5px solid #0d9488;">
                         <div class="metric-label">UAP Affordable Housing FAR</div>
                         <div class="metric-val" id="lblUapFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblUapMaxSf">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Allowed Land Uses Matrix -->
             <div class="card">
                 <h2>4. Complete Use Group Allowance & Mapped Elements Matrix</h2>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
@@ -131,7 +111,6 @@
                 </div>
             </div>
 
-            <!-- Reference Table -->
             <div class="card">
                 <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
                 <table>
@@ -157,3 +136,7 @@
             "R3": { stdFar: 0.50, uapFar: 0.60, resUses: "Low-Rise Detached, Semi-Detached, and Multi-Family Contextual profiles.", cfUses: "Houses of worship, medical clinics, schools, clubs." },
             "R4": { stdFar: 0.75, uapFar: 0.90, resUses: "Detached, Semi-Detached rowhouses, and small multi-family garden apartments.", cfUses: "Local schools, houses of worship, medical clinics." },
             "R5": { stdFar: 1.25, uapFar: 1.65, resUses: "Single/Two-Family Rowhouses, Detached, Semi-Detached and Small Multi-Family Apartments", cfUses: "Houses of worship, medical offices, schools." },
+            "R6": { stdFar: 2.20, uapFar: 3.60, resUses: "Medium-Density Apartment complexes, Quality Housing or Traditional Height Factor layouts.", cfUses: "Schools, neighborhood medical centers, libraries, community centers." },
+            "R7": { stdFar: 3.44, uapFar: 4.60, resUses: "Medium-High Density Apartments, Quality Housing Option framework optimizations.", cfUses: "Ambulatory healthcare services, full educational facilities, houses of worship." },
+            "R7X": { stdFar: 5.00, uapFar: 6.00, resUses: "Contextual Multi-Family Envelopes. Strict front street walls and standard residential configurations allowed.", cfUses: "Ambulatory medical facilities, schools, libraries, non-profit institutions." },
+            "R8": { stdFar: 6.02, uapFar: 7.20, resUses: "High-Density Urban Apartments, tower configurations or high-bulk contextual layouts.", cfUses: "Hospitals, full non-profit complexes, higher learning universities." },

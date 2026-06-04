@@ -25,12 +25,11 @@
         h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary-color); border-bottom: 2px solid var(--primary-light); padding-bottom: 6px; }
         p { font-size: 0.85rem; color: var(--text-muted); margin-top: -4px; }
         
-        /* BBL Form Layout Input Box controls */
         .bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
         select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
         select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
         
-        button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; grid-column: span 1; width: 100%; }
+        button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
         button:hover { background-color: #0f766e; }
         
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
@@ -58,22 +57,23 @@
         <!-- Input Section -->
         <div class="card">
             <h2>1. Enter Property Tax Map Identifiers (BBL Code)</h2>
-            <p>Select the borough and enter your explicit tax Block and Lot dimensions below to process live municipal data:</p>
+            <p>Select a borough and type your target Block and Lot numbers below to process live municipal data:</p>
             <div class="bbl-box">
                 <div>
                     <select id="boroughInput">
+                        <option value="" disabled selected>Select Borough...</option>
                         <option value="1">1 - Manhattan</option>
                         <option value="2">2 - Bronx</option>
                         <option value="3">3 - Brooklyn</option>
-                        <option value="4" selected>4 - Queens</option>
+                        <option value="4">4 - Queens</option>
                         <option value="5">5 - Staten Island</option>
                     </select>
                 </div>
                 <div>
-                    <input type="text" id="blockInput" placeholder="Block (e.g. 1323)" value="1323">
+                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)" value="">
                 </div>
                 <div>
-                    <input type="text" id="lotInput" placeholder="Lot (e.g. 44)" value="44">
+                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)" value="">
                 </div>
                 <div style="display: flex; align-items: flex-end;">
                     <button id="searchBtn">Run BBL Query</button>
@@ -152,6 +152,7 @@
         </div>
     </div>
 
-    <script src="zoning-core.js"></script>
+    <!-- The URL tracking argument forces your web browser to dump old file data maps -->
+    <script src="zoning-core.js?v=2.0"></script>
 </body>
 </html>

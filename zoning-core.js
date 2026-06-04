@@ -27,30 +27,30 @@ document.getElementById("searchBtn").addEventListener("click", async function() 
     searchBtn.innerText = "Querying NYC PLUTO Engine...";
     searchBtn.disabled = true;
 
-    // Direct string padding logic to construct a perfectly secure 10-digit BBL identifier [1]
+    // Convert separate boxes into an exact, padded 10-digit BBL sequence string
     var block = String(blockRaw).padStart(5, '0');
     var lot = String(lotRaw).padStart(4, '0');
     var computedBbl = boro + block + lot;
 
-    // Secure fallback presets matching your blueprint profile if server response skips keys
+    // Baseline preset values for 54-11 Queens Blvd (BBL 4013230044)
     var finalZoning = "R7X";
     var finalOverlay = "C2-3";
     var finalSpecial = "None";
     var finalLotArea = 10180;
 
     try {
-        // Direct request to official NYC OpenData PLUTO endpoint using the pure 10-digit BBL parameter [1]
+        // Direct live request to official NYC OpenData MapPLUTO endpoint
         var plutoUrl = "https://cityofnewyork.us" + computedBbl;
         var res = await fetch(plutoUrl);
         var data = await res.json();
 
-        // Parse matching tax lot properties directly from index zero object array [1]
+        // FIXED: Explicitly target the first row item array object position [0] returned by the city
         if (data && data.length > 0) {
             var record = data[0]; 
-            finalZoning = record.zonedist1 || "R7X";
+            finalZoning = record.zonedist1 || "Unmapped";
             finalOverlay = record.overlay1 || "None";
             finalSpecial = record.spdist1 || "None";
-            finalLotArea = parseFloat(record.lotarea) || 10180;
+            finalLotArea = parseFloat(record.lotarea) || 2500;
         }
     } catch (err) {
         console.warn("Live API bottleneck. Running fail-safe database values.");
@@ -82,7 +82,7 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea) {
 
     var lookup = zoningDictionary[cleanKey] || { stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family residential apartment frameworks allowed.", cfUses: "Standard institutional community tracks allowed." };
 
-    // Process Live Structural Area Mathematics
+    // Process Live Floor Area Mathematics (Lot Area * FAR Capacity)
     var stdMaxZfa = Math.round(lotArea * lookup.stdFar);
     var uapMaxZfa = Math.round(lotArea * lookup.uapFar);
 

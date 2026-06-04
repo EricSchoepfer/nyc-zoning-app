@@ -47,13 +47,13 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Live ZoLa Bulk Calculations & Permitted Use Matrix</p>
+            <p class="subtitle">Modern City Data Engine: Permitted Use Matrix & Bulk Calculations</p>
         </header>
 
         <!-- Input Section -->
         <div class="card">
             <h2>1. Property Search</h2>
-            <p>Enter any valid NYC street address to pull live lot area data and process envelope metrics:</p>
+            <p>Enter any valid NYC street address or target description to run a direct analysis check:</p>
             <div class="search-box">
                 <input type="text" id="addressInput" value="54-11 Queens Boulevard">
                 <button id="searchBtn">Generate Analysis Guide</button>
@@ -78,7 +78,7 @@
             <!-- Dynamic FAR Matrix Output Block -->
             <div class="card">
                 <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-                <p>Calculations scaled dynamically using official MapPLUTO lot area vectors.</p>
+                <p>Calculations scaled dynamically using official municipal lot area metrics.</p>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
                     <div class="metric-box" style="border-left: 5px solid var(--primary-color);">
                         <div class="metric-label">Standard Baseline FAR</div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Pro Zoning Analysis Tool</title>
+    <title>NYC Pro Zoning BBL Analysis Tool</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -24,10 +24,15 @@
         .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary-color); border-bottom: 2px solid var(--primary-light); padding-bottom: 6px; }
         p { font-size: 0.85rem; color: var(--text-muted); margin-top: -4px; }
-        .search-box { display: flex; gap: 10px; margin-top: 15px; }
-        input[type="text"] { flex: 1; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; }
-        button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        
+        /* BBL Form Layout Input Box controls */
+        .bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
+        select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
+        select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
+        
+        button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; grid-column: span 1; width: 100%; }
         button:hover { background-color: #0f766e; }
+        
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
         .info-item { padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem; }
         .info-item strong { display: block; color: var(--primary-color); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
@@ -47,16 +52,32 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Live ZoLa Bulk Calculations & Permitted Use Matrix</p>
+            <p class="subtitle">Tax Lot BBL Data Engine: Live Allowed Uses & ZFA Calculator</p>
         </header>
 
         <!-- Input Section -->
         <div class="card">
-            <h2>1. Property Search</h2>
-            <p>Enter any valid NYC street address or target description to run a direct analysis check:</p>
-            <div class="search-box">
-                <input type="text" id="addressInput" value="54-11 Queens Boulevard">
-                <button id="searchBtn">Generate Analysis Guide</button>
+            <h2>1. Enter Property Tax Map Identifiers (BBL Code)</h2>
+            <p>Select the borough and enter your explicit tax Block and Lot dimensions below to process live municipal data:</p>
+            <div class="bbl-box">
+                <div>
+                    <select id="boroughInput">
+                        <option value="1">1 - Manhattan</option>
+                        <option value="2">2 - Bronx</option>
+                        <option value="3">3 - Brooklyn</option>
+                        <option value="4" selected>4 - Queens</option>
+                        <option value="5">5 - Staten Island</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="text" id="blockInput" placeholder="Block (e.g. 1323)" value="1323">
+                </div>
+                <div>
+                    <input type="text" id="lotInput" placeholder="Lot (e.g. 44)" value="44">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button id="searchBtn">Run BBL Query</button>
+                </div>
             </div>
         </div>
 
@@ -65,9 +86,9 @@
             
             <!-- Result Parameters Dashboard -->
             <div class="card">
-                <h2>2. Active ZoLa Site Parameters</h2>
+                <h2>2. Active ZoLa Site Parameters (BBL Linked)</h2>
                 <div class="info-grid">
-                    <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
+                    <div class="info-item"><strong>Parsed 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
                     <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
                     <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
                     <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
@@ -78,7 +99,7 @@
             <!-- Dynamic FAR Matrix Output Block -->
             <div class="card">
                 <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-                <p>Calculations scaled dynamically using official municipal lot area metrics.</p>
+                <p>Calculations scaled dynamically using official municipal lot area metrics pulled directly via PLUTO.</p>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
                     <div class="metric-box" style="border-left: 5px solid var(--primary-color);">
                         <div class="metric-label">Standard Baseline FAR</div>

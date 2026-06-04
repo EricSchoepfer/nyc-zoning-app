@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Live Zoning Analysis Guide</title>
+    <title>NYC Pro Zoning Analysis Tool</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -14,6 +14,7 @@
             --bg-main: #f3f4f6;
             --border-color: #e5e7eb;
             --mandatory-color: #ef4444;
+            --conditional-color: #f59e0b;
         }
         body { font-family: Arial, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -29,13 +30,17 @@
         button:hover { background-color: #0f766e; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
         .info-item { padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem; }
-        .info-item strong { display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
+        .info-item strong { display: block; color: var(--primary-color); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
         table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; font-size: 0.85rem; }
-        th { background-color: #eff6ff; color: #1e3a8a; padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
+        th { background-color: var(--primary-light); color: var(--primary-color); padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
         td { padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; }
         tr:hover { background-color: #f9fafb; }
-        .error-msg { background-color: #fee2e2; color: var(--mandatory-color); padding: 12px; border-radius: 6px; margin-top: 12px; font-size: 0.9rem; }
         .hidden { display: none !important; }
+        
+        /* Metric Box Styling */
+        .metric-box { background-color: #fff; border: 2px solid var(--border-color); border-radius: 6px; padding: 15px; text-align: center; }
+        .metric-val { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
+        .metric-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -43,21 +48,20 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Live ZoLa Property Address Query & Permitted Elements Matrix</p>
+            <p class="subtitle">Live ZoLa Bulk Calculations & Permitted Use Matrix</p>
         </header>
 
         <!-- Input Section -->
         <div class="card">
             <h2>1. Property Search</h2>
-            <p>Enter any valid NYC street address to query live municipal planning databases:</p>
+            <p>Enter any valid NYC street address to pull live lot area data and process envelope metrics:</p>
             <div class="search-box">
                 <input type="text" id="addressInput" value="54-11 Queens Boulevard">
                 <button id="searchBtn">Generate Analysis Guide</button>
             </div>
-            <div id="errorMessage" class="error-msg hidden"></div>
         </div>
 
-        <!-- Site Data Panels -->
+        <!-- Workspace Elements -->
         <div id="resultsWrapper" class="hidden">
             
             <!-- Result Parameters Dashboard -->
@@ -68,24 +72,42 @@
                     <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
                     <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
                     <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
-                    <div class="info-item"><strong>BBL Tax Markers:</strong> <span id="infoBbl">-</span></div>
+                    <div class="info-item"><strong>Lot Square Footage:</strong> <span id="infoLotArea">-</span></div>
                 </div>
             </div>
 
-            <!-- Use Matrix Breakdowns -->
+            <!-- Dynamic FAR Matrix Output Block -->
             <div class="card">
-                <h2>3. Complete Use Group Allowance & Mapped Elements Matrix</h2>
+                <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
+                <p>Calculations scaled dynamically using official MapPLUTO lot area vectors.</p>
+                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
+                    <div class="metric-box" style="border-left: 5px solid var(--primary-color);">
+                        <div class="metric-label">Standard Baseline FAR</div>
+                        <div class="metric-val" id="lblStdFar">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblStdMaxSf">-</div>
+                    </div>
+                    <div class="metric-box" style="border-left: 5px solid var(--accent-color);">
+                        <div class="metric-label">UAP Affordable Housing FAR</div>
+                        <div class="metric-val" id="lblUapFar">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblUapMaxSf">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Allowed Land Uses Matrix -->
+            <div class="card">
+                <h2>4. Complete Use Group Allowance & Mapped Elements Matrix</h2>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
                     <div class="info-item" style="background: white; border-color: #1e3a8a;">
-                        <strong style="color: #1e3a8a;">🏠 Residential Framework</strong>
+                        <strong style="color: #1e3a8a;">🏠 Allowed Residential Uses</strong>
                         <div id="resUseText" style="margin-top: 6px; color: #374151;">-</div>
                     </div>
                     <div class="info-item" style="background: white; border-color: #0d9488;">
-                        <strong style="color: #0d9488;">🏥 Community Facility Framework</strong>
+                        <strong style="color: #0d9488;">🏥 Allowed Community Facility Uses</strong>
                         <div id="cfUseText" style="margin-top: 6px; color: #374151;">-</div>
                     </div>
                     <div class="info-item" style="background: white; border-color: #f59e0b;">
-                        <strong style="color: #f59e0b;">🏭 Commercial & Special Overlay Framework</strong>
+                        <strong style="color: #f59e0b;">🏭 Allowed Commercial / Overlay Uses</strong>
                         <div id="commUseText" style="margin-top: 6px; color: #374151;">-</div>
                     </div>
                 </div>
@@ -93,7 +115,7 @@
 
             <!-- Reference Table -->
             <div class="card">
-                <h2>4. Bulk Parameter, Envelope, & Special District Guide</h2>
+                <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
                 <table>
                     <thead>
                         <tr>
@@ -110,7 +132,6 @@
         </div>
     </div>
 
-    <!-- External script path forces browser cash clearing -->
     <script src="zoning-core.js"></script>
 </body>
 </html>

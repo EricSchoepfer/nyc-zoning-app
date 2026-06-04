@@ -38,7 +38,6 @@
         th { background-color: var(--primary-light); color: var(--primary-color); padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
         td { padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; }
         tr:hover { background-color: #f9fafb; }
-        .hidden { display: none !important; }
         
         .metric-box { background-color: #fff; border: 2px solid var(--border-color); border-radius: 6px; padding: 15px; text-align: center; }
         .metric-val { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
@@ -80,8 +79,8 @@
             </div>
         </div>
 
-        <!-- Workspace Elements -->
-        <div id="resultsWrapper" class="hidden">
+        <!-- Workspace Elements (Hidden by default using standard inline style) -->
+        <div id="resultsWrapper" style="display: none;">
             
             <!-- Result Parameters Dashboard -->
             <div class="card">

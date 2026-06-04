@@ -74,8 +74,8 @@
                     <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)">
                 </div>
                 <div style="display: flex; align-items: flex-end;">
-                    <!-- FIXED: Replaced standard click hooks with an ironclad, old-school inline execution link -->
-                    <button id="searchBtn" onclick="executeZoningBblAnalysis()">Run BBL Query</button>
+                    <!-- NATIVE ONCLICK BINDING: Invokes a global window script function direct execution entry point -->
+                    <button id="searchBtn" onclick="window.executeZoningBblAnalysis();">Run BBL Query</button>
                 </div>
             </div>
         </div>
@@ -152,9 +152,11 @@
     </div>
 
     <script>
-        // Internal data library mapping
+        // Internal dictionary mapping
         const zoningDictionary = {
             "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences (Use Group I).", cfUses: "Basic neighborhood community facilities, houses of worship." },
             "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic neighborhood community facilities, houses of worship." },
             "R3": { stdFar: 0.50, uapFar: 0.60, resUses: "Low-Rise Detached, Semi-Detached, and Multi-Family Contextual profiles.", cfUses: "Houses of worship, medical clinics, schools, clubs." },
             "R4": { stdFar: 0.75, uapFar: 0.90, resUses: "Detached, Semi-Detached rowhouses, and small multi-family garden apartments.", cfUses: "Local schools, houses of worship, medical clinics." },
+
+        

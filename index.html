@@ -27,7 +27,6 @@
         
         .bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
         select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
-        select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
         
         button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
         button:hover { background-color: #0f766e; }
@@ -70,10 +69,10 @@
                     </select>
                 </div>
                 <div>
-                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)" value="">
+                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)">
                 </div>
                 <div>
-                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)" value="">
+                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)">
                 </div>
                 <div style="display: flex; align-items: flex-end;">
                     <button id="searchBtn">Run BBL Query</button>
@@ -152,7 +151,10 @@
         </div>
     </div>
 
-    <!-- The URL tracking argument forces your web browser to dump old file data maps -->
-    <script src="zoning-core.js?v=2.0"></script>
-</body>
-</html>
+    <script>
+        const zoningDictionary = {
+            "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences (Use Group I).", cfUses: "Basic neighborhood community facilities, houses of worship." },
+            "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic neighborhood community facilities, houses of worship." },
+            "R3": { stdFar: 0.50, uapFar: 0.60, resUses: "Low-Rise Detached, Semi-Detached, and Multi-Family Contextual profiles.", cfUses: "Houses of worship, medical clinics, schools, clubs." },
+            "R4": { stdFar: 0.75, uapFar: 0.90, resUses: "Detached, Semi-Detached rowhouses, and small multi-family garden apartments.", cfUses: "Local schools, houses of worship, medical clinics." },
+            "R5": { stdFar: 1.25, uapFar: 1.65, resUses: "Single/Two-Family Rowhouses, Detached, Semi-Detached and Small Multi-Family Apartments", cfUses: "Houses of worship, medical offices, schools." },

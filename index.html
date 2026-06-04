@@ -29,14 +29,14 @@
         <!-- Input Dashboard Card -->
         <div class="card">
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p>Type any address, borough name, cross-streets, or exact tax Block & Lot numbers to map out allowed elements:</p>
+            <p>Type any address, borough name, cross-streets, zoning code, or exact tax Block & Lot numbers to map out allowed elements:</p>
             <div class="search-box">
                 <input type="text" id="userInputField" value="54-11 Queens Boulevard">
                 <button id="triggerButton">Generate Analysis Guide</button>
             </div>
         </div>
 
-        <!-- Universal App Workspace (Hidden by default, unlocked instantly via click event) -->
+        <!-- Universal App Workspace -->
         <div id="workspaceWrapper" style="display: none;">
             
             <!-- Result Parameters Dashboard -->
@@ -89,40 +89,45 @@
     </div>
 
     <script>
-        // Use a secure W3C listener configuration to prevent browser blockages
         document.getElementById("triggerButton").addEventListener("click", function() {
             var rawInput = document.getElementById("userInputField").value;
             if (!rawInput || rawInput.trim() === "") { alert("Please type a location identifier first."); return; }
             
-            var query = rawInput.toLowerCase().trim();
+            // Clean input but keep uppercase for exact zoning letter checks
+            var query = rawInput.trim();
+            var checkLower = query.toLowerCase();
 
-            // Default fallback templates
-            var finalTarget = rawInput;
+            // Direct defaults matching your blueprint
+            var finalTarget = query;
             var finalZoning = "R7X";
             var finalOverlay = "C2-3";
             var finalSpecial = "None";
             var citationText = "Standard city-wide framework text rules apply.";
 
-            // Parsing engine rules matching borough descriptions or block integers
-            if (query.indexOf("brooklyn") !== -1 || query.indexOf("r6") !== -1 || query.indexOf("block 3") !== -1) {
+            // FIXED: Independent detection rules for text combinations, districts, or BBLs
+            if (checkLower.indexOf("brooklyn") !== -1 || checkLower.indexOf("r6") !== -1 || checkLower.indexOf("block 3") !== -1) {
                 finalZoning = "R6";
                 finalOverlay = "None";
-            } else if (query.indexOf("manhattan") !== -1 || query.indexOf("c4") !== -1 || query.indexOf("block 1") !== -1) {
+            } else if (checkLower.indexOf("manhattan") !== -1 || checkLower.indexOf("c4") !== -1 || checkLower.indexOf("block 1") !== -1) {
                 finalZoning = "C4-7";
                 finalOverlay = "Commercial Zone Core";
                 finalSpecial = "Special Midtown District (MiD)";
                 citationText = "<b>⚠️ Midtown District Rules Enforced:</b> Specialized tower rules, retail streetscape treatments, and alternate height caps apply.";
-            } else if (query.indexOf("bronx") !== -1 || query.indexOf("m1") !== -1 || query.indexOf("block 2") !== -1) {
+            } else if (checkLower.indexOf("bronx") !== -1 || checkLower.indexOf("m1") !== -1 || checkLower.indexOf("block 2") !== -1) {
                 finalZoning = "M1-2";
                 finalOverlay = "None";
-            } else if (query.indexOf("long island city") !== -1 || query.indexOf("lic") !== -1 || query.indexOf("block 4") !== -1) {
+            } else if (checkLower.indexOf("long island city") !== -1 || checkLower.indexOf("lic") !== -1 || checkLower.indexOf("block 4") !== -1) {
                 finalZoning = "M1-4/R7A";
                 finalOverlay = "C2-5 Mixed";
                 finalSpecial = "Special Long Island City District (LIC)";
                 citationText = "<b>⚠️ LIC Special Text Applied:</b> Specialized text pairings apply for mixed manufacturing and residential designs built side-by-side.";
+            } else if (query.toUpperCase().startsWith("R") || query.toUpperCase().startsWith("C") || query.toUpperCase().startsWith("M")) {
+                // If a user types a raw zoning district code directly
+                finalZoning = query.toUpperCase();
+                finalOverlay = "None";
             }
 
-            // Fill text labels into workspace panels
+            // Populate text elements
             document.getElementById("lblTarget").innerText = finalTarget;
             document.getElementById("lblZoning").innerText = finalZoning;
             document.getElementById("lblOverlay").innerText = finalOverlay;
@@ -130,6 +135,7 @@
 
             var firstChar = finalZoning.charAt(0).toUpperCase();
 
+            // Residential Panel Mapping
             if (firstChar === "R" || finalZoning.indexOf("/") !== -1) {
                 document.getElementById("txtResidential").innerHTML = "<b>Permitted Elements:</b> Multi-family residential apartments are fully allowed under standard <b>Use Group II</b> parameters.";
                 document.getElementById("txtCommunity").innerHTML = "<b>Permitted Elements:</b> Institutional footprints (schools, public spaces, houses of worship, ambulatory health) are allowed under <b>Use Group III</b> parameters.";
@@ -141,8 +147,5 @@
                 document.getElementById("txtCommunity").innerHTML = "<b style='color:#ef4444;'>🚫 Restricted Elements:</b> Community spaces are heavily capped or disallowed in dense industrial parks.";
             }
 
-            if (finalOverlay !== "None") {
-                document.getElementById("txtCommercial").innerHTML = "<b>Permitted via Overlay (" + finalOverlay + "):</b> Local shops, storefront entries, barber assets, dry cleaners, and standard neighborhood eateries (<b>Use Group VI</b>) are allowed on the ground floor.";
-            } else if (firstChar === "C") {
-                document.getElementById("txtCommercial").innerHTML = "<b>Permitted (Commercial Zone):</b> Broad merchant options fully open across all open levels. Allows shopping strips and office facilities (<b>Use Groups V through VIII</b>).";
-            } else if (firstChar === "M") {
+            // Commercial / Overlay Mapping
+            if (finalOverlay !== "None" && finalOverlay !== "none") {

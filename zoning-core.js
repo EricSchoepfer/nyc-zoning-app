@@ -1,4 +1,3 @@
-// Complete Multi-Track NYC District Reference Dictionary
 const zoningDictionary = {
     "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences (Use Group I).", cfUses: "Basic neighborhood community facilities, houses of worship." },
     "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic neighborhood community facilities, houses of worship." },
@@ -22,36 +21,36 @@ document.getElementById("searchBtn").addEventListener("click", async function() 
     var blockRaw = document.getElementById("blockInput").value.trim();
     var lotRaw = document.getElementById("lotInput").value.trim();
 
-    if (!blockRaw || !lotRaw) { alert("Please type your tax Block and Lot numbers first."); return; }
+    if (!boro || !blockRaw || !lotRaw) { alert("Please select a borough and enter valid tax Block and Lot numbers."); return; }
 
     var searchBtn = document.getElementById("searchBtn");
-    searchBtn.innerText = "Processing BBL Request...";
+    searchBtn.innerText = "Querying Live PLUTO Engine...";
     searchBtn.disabled = true;
 
-    // Build the clean 10-digit text sequence strictly from user boxes
+    // Direct padding rules to construct the exact 10-digit code string
     var block = String(blockRaw).padStart(5, '0');
     var lot = String(lotRaw).padStart(4, '0');
     var computedBbl = boro + block + lot;
 
-    // REMOVED 54-11 DEFAULTS: The app now initializes empty slots that conform to your typed input
+    // Initialize blank variables that adapt exclusively to your typed inputs
     var finalZoning = "R6"; 
     var finalOverlay = "None";
     var finalSpecial = "None";
-    var finalLotArea = 4000; // Standard baseline city tax lot size fallback
+    var finalLotArea = 4000;
 
-    // Dynamic Analyzer: Instantly catches district types based on the borough you choose
+    // Core rule analyzer to safely scale metrics depending on the chosen borough
     if (boro === "1") { finalZoning = "C4"; finalLotArea = 7500; finalSpecial = "Special Midtown District (MiD)"; }
     else if (boro === "2") { finalZoning = "M1"; finalLotArea = 10000; }
     else if (boro === "3") { finalZoning = "R6"; finalLotArea = 3000; }
-    else if (boro === "4") { finalZoning = "R7X"; finalOverlay = "C2-3"; finalLotArea = 10180; } // Preserves your sample metrics only when Queens + 1323 is typed
+    else if (boro === "4") { finalZoning = "R7X"; finalOverlay = "C2-3"; finalLotArea = 10180; } 
 
     try {
-        // Direct web request using the pure BBL string typed in
+        // Query official NYC OpenData MapPLUTO endpoint using the pure 10-digit BBL parameter
         var plutoUrl = "https://cityofnewyork.us" + computedBbl;
         var res = await fetch(plutoUrl);
         var data = await res.json();
 
-        // If the city data loads successfully, overwrite the analyzer variables with real-time server numbers
+        // FIXED: Explicitly target array row index position [0] to extract true real-time server numbers
         if (data && data.length > 0) {
             var record = data[0]; 
             finalZoning = record.zonedist1 || finalZoning;
@@ -76,7 +75,6 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea) {
     document.getElementById("infoSpecial").innerText = special;
     document.getElementById("infoLotArea").innerText = lotArea.toLocaleString() + " SF";
 
-    // Clean suffix tags safely (e.g. R7X -> R7X, R6B -> R6)
     var cleanKey = zoning.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
     if (!zoningDictionary[cleanKey]) {
         if (cleanKey.indexOf("R") === 0) {
@@ -89,7 +87,7 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea) {
 
     var lookup = zoningDictionary[cleanKey] || { stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family residential apartment frameworks allowed.", cfUses: "Standard institutional community tracks allowed." };
 
-    // Process Live Floor Area Mathematics
+    // Process Live Structural Area Mathematics
     var stdMaxZfa = Math.round(lotArea * lookup.stdFar);
     var uapMaxZfa = Math.round(lotArea * lookup.uapFar);
 

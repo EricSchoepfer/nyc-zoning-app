@@ -29,7 +29,7 @@
         button:hover { background-color: #0f766e; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
         .info-item { padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem; }
-        .info-item strong { display: block; color: var(--primary-color); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
+        .info-item strong { display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
         table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; font-size: 0.85rem; }
         th { background-color: #eff6ff; color: #1e3a8a; padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
         td { padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; }
@@ -48,17 +48,16 @@
         <!-- Input Section -->
         <div class="card">
             <h2>1. Property Search</h2>
-            <p>Enter any valid NYC street address or target description to run a query against the live NYC planning databases:</p>
+            <p>Enter any valid NYC street address to query live municipal planning databases:</p>
             <div class="search-box">
                 <input type="text" id="addressInput" value="54-11 Queens Boulevard">
                 <button id="searchBtn">Generate Analysis Guide</button>
             </div>
         </div>
 
-        <!-- Site Data Panels (Hidden until button is clicked) -->
+        <!-- Workspace Elements -->
         <div id="resultsWrapper" class="hidden">
             
-            <!-- Result Parameters Dashboard -->
             <div class="card">
                 <h2>2. Active ZoLa Site Parameters</h2>
                 <div class="info-grid">
@@ -70,9 +69,8 @@
                 </div>
             </div>
 
-            <!-- Use Matrix Breakdowns -->
             <div class="card">
-                <h2>3. Complete Use Group Allowance & Mapped Elements Matrix</h2>
+                <h2>3. Use Group Allowance & Mapped Elements Matrix</h2>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
                     <div class="info-item" style="background: white; border-color: #1e3a8a;">
                         <strong style="color: #1e3a8a;">🏠 Residential Framework</strong>
@@ -89,7 +87,6 @@
                 </div>
             </div>
 
-            <!-- Reference Table -->
             <div class="card">
                 <h2>4. Bulk Parameter, Envelope, & Special District Guide</h2>
                 <table>
@@ -108,62 +105,7 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById("searchBtn").addEventListener("click", async function() {
-            var rawAddress = document.getElementById("addressInput").value;
-            if (!rawAddress || rawAddress.trim() === "") { alert("Please type an address first."); return; }
-
-            var searchBtn = document.getElementById("searchBtn");
-            searchBtn.innerText = "Querying NYC ZoLa Database...";
-            searchBtn.disabled = true;
-
-            // Baseline variables to run if live registry returns blanks
-            var targetTitle = rawAddress;
-            var targetZoning = "R7X";
-            var targetOverlay = "C2-3";
-            var targetSpecial = "None";
-            var targetBbl = "Block 1323 | Lot 44";
-
-            try {
-                // RESTORED: Calling the official live NYC Planning Labs Geosearch endpoint
-                var url = "https://planninglabs.nyc" + encodeURIComponent(rawAddress);
-                var res = await fetch(url);
-                var data = await res.json();
-
-                if (data.features && data.features.length > 0) {
-                    var props = data.features[0].properties; // UPDATED: Correctly tracking index 0 property array keys
-                    targetTitle = props.label || rawAddress;
-                    targetZoning = props.zone_dist1 || "R7X";
-                    targetOverlay = props.commercial_overlay1 || "None";
-                    targetSpecial = props.special_district1 || "None";
-                    targetBbl = "Borough: " + (props.borough || "N/A") + " | Block: " + (props.block || "N/A") + " | Lot: " + (props.lot || "N/A");
-                }
-            } catch (err) {
-                console.warn("API hit network block. Running structural parameter builder fallback defaults.");
-            }
-
-            // Execute element rendering loop
-            buildMatrixLayout(targetTitle, targetZoning, targetOverlay, targetSpecial, targetBbl);
-            
-            searchBtn.innerText = "Generate Analysis Guide";
-            searchBtn.disabled = false;
-        });
-
-        function buildMatrixLayout(title, district, overlay, special, bbl) {
-            document.getElementById("infoAddress").innerText = title;
-            document.getElementById("infoZoning").innerText = district;
-            document.getElementById("infoOverlay").innerText = overlay;
-            document.getElementById("infoSpecial").innerText = special;
-            document.getElementById("infoBbl").innerText = bbl;
-
-            var letter = district.charAt(0).toUpperCase();
-
-            // Use Group permissions tracking
-            if (letter === "R" || district.indexOf("/") !== -1) {
-                document.getElementById("resUseText").innerHTML = "<b>Permitted (As-Of-Right):</b> Multi-family residential use groups are permitted on site under <b>Use Group II</b> parameters.";
-                document.getElementById("cfUseText").innerHTML = "<b>Permitted (As-Of-Right):</b> Community facilities (including healthcare clinics, schools, and houses of worship) are allowed under <b>Use Group III</b> parameters.";
-            } else if (letter === "C") {
-                document.getElementById("resUseText").innerHTML = "<b>Permitted (Mixed Use):</b> Residential structures are unlocked side-by-side with commercial floorplans.";
-                document.getElementById("cfUseText").innerHTML = "<b>Permitted (As-Of-Right):</b> Full institutional infrastructure tracking allowed.";
-            } else {
-                document.getElementById("resUseText").innerHTML = "<b style='color:var(--mandatory-color)'>🚫 Prohibited:</b> Standalone housing is disallowed inside Manufacturing districts.";
+    <!-- Force cache clearing by linking script externally -->
+    <script src="zoning-core.js"></script>
+</body>
+</html>

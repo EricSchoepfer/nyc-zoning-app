@@ -56,8 +56,7 @@
             <h2>1. Enter Property Tax Map Identifiers (BBL Code)</h2>
             <p>Select a borough and type your target Block and Lot numbers below to process data:</p>
             
-            <!-- FIXED FORM CHASSIS: Form submit captures the trigger natively, overriding button security bugs -->
-            <form id="zoningForm">
+            <form id="zoningForm" onsubmit="event.preventDefault(); runZoningAnalysisDashboard();">
                 <div class="bbl-box">
                     <div>
                         <select id="boroughInput" required>
@@ -76,13 +75,14 @@
                         <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)" required>
                     </div>
                     <div style="display: flex; align-items: flex-end;">
+                        <!-- FIXED TYPE BINDING: Form submission triggers the execution natively while keeping your inputs safely on-screen -->
                         <button type="submit" id="searchBtn">Run BBL Query</button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <!-- Workspace Elements (Hidden until form submit fires) -->
+        <!-- Workspace Elements -->
         <div id="resultsWrapper" style="display: none;">
             
             <!-- Result Parameters Dashboard -->

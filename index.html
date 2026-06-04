@@ -34,6 +34,7 @@
         th { background-color: #eff6ff; color: #1e3a8a; padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
         td { padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; }
         tr:hover { background-color: #f9fafb; }
+        .error-msg { background-color: #fee2e2; color: var(--mandatory-color); padding: 12px; border-radius: 6px; margin-top: 12px; font-size: 0.9rem; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -53,11 +54,13 @@
                 <input type="text" id="addressInput" value="54-11 Queens Boulevard">
                 <button id="searchBtn">Generate Analysis Guide</button>
             </div>
+            <div id="errorMessage" class="error-msg hidden"></div>
         </div>
 
-        <!-- Workspace Elements -->
+        <!-- Site Data Panels -->
         <div id="resultsWrapper" class="hidden">
             
+            <!-- Result Parameters Dashboard -->
             <div class="card">
                 <h2>2. Active ZoLa Site Parameters</h2>
                 <div class="info-grid">
@@ -69,8 +72,9 @@
                 </div>
             </div>
 
+            <!-- Use Matrix Breakdowns -->
             <div class="card">
-                <h2>3. Use Group Allowance & Mapped Elements Matrix</h2>
+                <h2>3. Complete Use Group Allowance & Mapped Elements Matrix</h2>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
                     <div class="info-item" style="background: white; border-color: #1e3a8a;">
                         <strong style="color: #1e3a8a;">🏠 Residential Framework</strong>
@@ -87,6 +91,7 @@
                 </div>
             </div>
 
+            <!-- Reference Table -->
             <div class="card">
                 <h2>4. Bulk Parameter, Envelope, & Special District Guide</h2>
                 <table>
@@ -105,7 +110,7 @@
         </div>
     </div>
 
-    <!-- Force cache clearing by linking script externally -->
+    <!-- External script path forces browser cash clearing -->
     <script src="zoning-core.js"></script>
 </body>
 </html>

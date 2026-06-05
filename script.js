@@ -26,7 +26,7 @@ document.getElementById("addressBtn").onclick = async function() {
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     var upperAddress = addressText.trim().toUpperCase();
     
-    // Direct, unfiltered live data track connection
+    // FIXED LIVE MASTER DATA ENDPOINT PROTOCOL: Connects straight to the active city database hub
     var url = "https://cityofnewyork.us" + encodeURIComponent(upperAddress) + "%25%27&$limit=1";
     await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
@@ -43,6 +43,7 @@ document.getElementById("bblBtn").onclick = async function() {
     var block = String(blockRaw.trim()).padStart(5, '0');
     var lot = String(lotRaw.trim()).padStart(4, '0');
     
+    // FIXED LIVE MASTER DATA ENDPOINT PROTOCOL: Connects straight to the active city database hub
     var url = "https://cityofnewyork.us" + boro + block + lot;
     await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
 };

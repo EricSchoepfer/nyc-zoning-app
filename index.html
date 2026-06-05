@@ -19,7 +19,6 @@
       <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
       
       <div class="search-grid">
-        <!-- Track A: Index-Filtered Address Input Panel -->
         <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
           <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
           <div style="margin-top: 10px; display: flex; gap: 8px;">
@@ -35,7 +34,6 @@
           <button type="button" id="addressBtn">Search Address Profile</button>
         </div>
 
-        <!-- Track B: BBL Input Panel -->
         <div>
           <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
           <div class="bbl-box">
@@ -57,7 +55,7 @@
       <div id="liveLog"></div>
     </div>
 
-    <!-- 2. Display Layout Sheets Workspace -->
+    <!-- 2. Display Layout Workspace -->
     <div id="resultsWrapper" style="display: none;">
       <div class="card">
         <h2>2. Active ZoLa Site Parameters</h2>
@@ -109,6 +107,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=7.0"></script>
+  <!-- Cache-buster URL parameters clear historic browser loops instantly -->
+  <script src="script.js?v=9.0"></script>
 </body>
 </html>

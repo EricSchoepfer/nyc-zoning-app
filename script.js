@@ -24,6 +24,7 @@ document.getElementById("addressBtn").onclick = async function() {
     if (!addressText || addressText.trim() === "") { alert("Please enter an address."); return; }
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     
+    // Connects to the active city open data portal
     var url = "https://cityofnewyork.us" + encodeURIComponent(addressText.toUpperCase()) + "%25%27&$limit=1";
     await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
@@ -63,22 +64,26 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
             finalAddress = record.address || fallbackLabel;
             finalBbl = record.bbl || "N/A";
             
-            // FIXED CLEAN SPLITTER: Separates multi-zone values safely step-by-step without chaining array errors
-            var rawZoning = record.zonedist1 || "R6";
-            var firstSplit = rawZoning.split("/")[0];
-            finalZoning = firstSplit.split("-")[0].trim();
+            // CRITICAL FIX: Safe, crash-proof text parsing engine avoids list processing deadlocks
+            var rawZoning = record.zonedist1;
+            if (rawZoning && typeof rawZoning === 'string') {
+                var cleanZoning = rawZoning.split("/")[0].split("-")[0].trim();
+                finalZoning = cleanZoning || "R6";
+            } else {
+                finalZoning = "R6";
+            }
             
             finalOverlay = record.overlay1 || "None";
             finalSpecial = record.spdist1 || "None";
             finalLotArea = parseFloat(record.lotarea) || finalLotArea;
         } else { 
-            showLiveLog("Location not found in city registry. Check your spelling or block formatting."); 
+            showLiveLog("Location not indexed inside current Pluto logs. Review block padding syntax."); 
         }
     } catch (err) { 
         showLiveLog("Live data line bottleneck. Reverting to sandbox tracks."); 
     }
 
-    // Print true values to dashboard sheets
+    // Print values directly to visible fields
     document.getElementById("infoAddress").innerText = finalAddress;
     document.getElementById("infoBbl").innerText = finalBbl;
     document.getElementById("infoZoning").innerText = finalZoning;
@@ -117,7 +122,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
     var specialNotice = "Standard underlying city-wide framework text rules apply.";
     if (finalSpecial !== "None" && finalSpecial !== "") {
-        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Controls Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
+        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
     }
 
     document.getElementById("tableBody").innerHTML = 

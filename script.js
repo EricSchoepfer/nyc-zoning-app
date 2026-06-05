@@ -1,4 +1,4 @@
-```javascript
+// Universal NYC Suffix-Proof Zoning Code Reference Table
 const zoningDictionary = {
     "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
     "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
@@ -26,9 +26,9 @@ document.getElementById("addressBtn").onclick = async function() {
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     var upperAddress = addressText.trim().toUpperCase();
     
-    // UNBLOCKABLE PROXY ROUTE: Routes Socrata queries through a CORS pipeline to satisfy browser security [INDEX]
+    // UPDATED PROXY: Routes Socrata queries natively via AllOrigins to satisfy CORS restrictions
     var targetUrl = "https://cityofnewyork.us" + encodeURIComponent(upperAddress) + "%25%27&$limit=1";
-    var proxyUrl = "https://herokuapp.com" + targetUrl;
+    var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
     
     await executeQueryPipeline(proxyUrl, addressText, "addressBtn", "Search Address Profile");
 };
@@ -46,8 +46,9 @@ document.getElementById("bblBtn").onclick = async function() {
     var lot = String(lotRaw.trim()).padStart(4, '0');
     var computedBbl = boro + block + lot;
     
+    // UPDATED PROXY: Routes Socrata queries natively via AllOrigins to satisfy CORS restrictions
     var targetUrl = "https://cityofnewyork.us" + computedBbl;
-    var proxyUrl = "https://herokuapp.com" + targetUrl;
+    var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
     
     await executeQueryPipeline(proxyUrl, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
 };
@@ -68,7 +69,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         var data = await res.json();
         
         if (data && data.length > 0) {
-            var record = data[0]; // Safely isolate index position zero from array response
+            var record = data[0]; 
             finalAddress = record.address || fallbackLabel;
             finalBbl = record.bbl || "N/A";
             finalZoning = record.zonedist1 || "R6";
@@ -93,7 +94,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     // Clean sub-suffixes safely (e.g. "R7-1" -> "R7")
     var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-    if (zoneMatch && zoneMatch[1]) {
+    if (zoneMatch && zoneMatch) {
         cleanKey = zoneMatch[1];
     } else {
         cleanKey = cleanKey.substring(0, 2);
@@ -135,4 +136,4 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
     document.getElementById("resultsWrapper").style.display = "block";
     document.getElementById(buttonId).innerText = originalButtonText;
-};
+}

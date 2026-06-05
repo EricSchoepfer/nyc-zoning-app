@@ -17,7 +17,7 @@ const zoningDictionary = {
   "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
 };
 
-// Global Initialization Wrapper ensures buttons connect after layout renders
+// Global Initialization Wrapper maps tracking paths securely
 function initTracker() {
   console.log("App initialization matrix loaded.");
 
@@ -28,7 +28,6 @@ function initTracker() {
       
       var boroSelect = document.getElementById("addressBoroSelect");
       var addressInput = document.getElementById("addressInput");
-      
       if (!boroSelect || !addressInput) return;
       
       var boroCode = boroSelect.value;
@@ -62,7 +61,6 @@ function initTracker() {
       var boroInput = document.getElementById("boroughInput");
       var blockInput = document.getElementById("blockInput");
       var lotInput = document.getElementById("lotInput");
-      
       if (!boroInput || !blockInput || !lotInput) return;
 
       var boro = boroInput.value;
@@ -89,7 +87,7 @@ function initTracker() {
   }
 }
 
-// Resilient load listener maps handlers regardless of script order tags
+// Resilient load listener maps button triggers regardless of link script order layouts
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initTracker);
 } else {
@@ -118,7 +116,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      // FIX 1: Dig into array entry index [0] to extract rows accurately
+      // CRITICAL FIX: Drill directly into array element [0] to extract object properties cleanly
       var record = data[0]; 
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
@@ -130,21 +128,21 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       var wrapper = document.getElementById("resultsWrapper");
       if (wrapper) wrapper.style.display = "block";
     } else {
-      showLiveLog("Location not found in active records. Verify address or BBL keys.");
+      showLiveLog("Location data match empty inside database registries.");
     }
   } catch (err) {
-    showLiveLog("API Connection roadblock. Checking live data links.");
+    showLiveLog("API Route roadblock encountered.");
     console.error(err);
   }
 
-  // Restore button control tracking states safely
+  // Release button lock state safely
   var btn = document.getElementById(buttonId);
   if (btn) {
     btn.innerText = originalButtonText;
     btn.disabled = false;
   }
 
-  // Print text variables out to page elements
+  // Print text strings out to workspace container nodes
   if (document.getElementById("infoAddress")) document.getElementById("infoAddress").innerText = finalAddress;
   if (document.getElementById("infoBbl")) document.getElementById("infoBbl").innerText = finalBbl;
   if (document.getElementById("infoZoning")) document.getElementById("infoZoning").innerText = finalZoning;
@@ -152,14 +150,13 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   if (document.getElementById("infoSpecial")) document.getElementById("infoSpecial").innerText = finalSpecial;
   if (document.getElementById("infoLotArea")) document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Clean zoning token keys defensively without dropping multi-character names
+  // Suffix strip parser string sanitization machine
   var cleanKey = "R6";
   if (finalZoning) {
     var parsed = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var matches = parsed.match(/^([A-Z]+[0-9]+)/);
     if (matches && matches[1]) {
-      // FIX 2: Pull the string token explicitly from the RegExp array index match
-      cleanKey = matches[1]; 
+      cleanKey = matches[1]; // CRITICAL FIX: Target index [1] of RegExp match array to extract text token cleanly
     } else {
       cleanKey = parsed.substring(0, 2);
     }
@@ -196,4 +193,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   if (finalSpecial !== "None" && finalSpecial !== "") {
     specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
   }
+
+  var table = document.getElementById("tableBody");
+  if (table) {
 

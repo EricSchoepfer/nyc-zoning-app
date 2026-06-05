@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Pro Zoning Dual-Track Tracker</title>
+    <title>NYC Pro Zoning BBL Analysis Tool</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,68 +11,43 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Index Filtered Search Engine: Real-Time Address & Tax Lot Calculator</p>
+            <p class="subtitle">Tax Lot BBL Data Engine: Live Allowed Uses & ZFA Calculator</p>
         </header>
 
-        <!-- Input Panel Section -->
         <div class="card">
-            <h2>1. Select Property Query Path (Address or BBL)</h2>
-            <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
+            <h2>1. Enter Property Tax Map Identifiers (Pre-filled Sandbox Mode)</h2>
+            <p>The form fields are pre-loaded with your 54-11 Queens Boulevard parcel data. Click the button directly to check execution:</p>
             
-            <div class="search-grid">
-                <!-- Track A: Index-Filtered Address Input Panel -->
-                <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
-                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
-                    <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <select id="addressBoroSelect" style="width: 45%;">
-                            <option value="BK">Brooklyn</option>
-                            <option value="MN">Manhattan</option>
-                            <option value="QN">Queens</option>
-                            <option value="BX">Bronx</option>
-                            <option value="SI">Staten Island</option>
-                        </select>
-                        <input type="text" id="addressInput" placeholder="e.g. 124 Grand Avenue" value="124 Grand Avenue">
-                    </div>
-                    <button type="button" id="addressBtn">Search Address Profile</button>
-                </div>
-                
-                <!-- Track B: BBL Input Panel -->
+            <div class="bbl-box">
                 <div>
-                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
-                    <div class="bbl-box">
-                        <div>
-                            <select id="boroughInput">
-                                <option value="3">3 - Brooklyn</option>
-                                <option value="1">1 - Manhattan</option>
-                                <option value="2">2 - Bronx</option>
-                                <option value="4">4 - Queens</option>
-                                <option value="5">5 - Staten Island</option>
-                            </select>
-                        </div>
-                        <div>
-                            <input type="text" id="blockInput" placeholder="Block" value="1964">
-                        </div>
-                        <div>
-                            <input type="text" id="lotInput" placeholder="Lot" value="1">
-                        </div>
-                    </div>
-                    <button type="button" id="bblBtn">Search BBL Profile</button>
+                    <select id="boroughInput">
+                        <option value="1">1 - Manhattan</option>
+                        <option value="2">2 - Bronx</option>
+                        <option value="3">3 - Brooklyn</option>
+                        <option value="4" selected>4 - Queens</option>
+                        <option value="5">5 - Staten Island</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)" value="1323">
+                </div>
+                <div>
+                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)" value="44">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button type="button" class="action-btn" id="searchBtn">Run BBL Query</button>
                 </div>
             </div>
-            
-            <!-- System Logger Feedback Panel -->
-            <div id="liveLog"></div>
         </div>
 
-        <!-- Display Layout Sheets Workspace -->
+        <!-- Workspace Elements (Hidden by default) -->
         <div id="resultsWrapper" style="display: none;">
             
             <!-- Result Parameters Dashboard -->
             <div class="card">
-                <h2>2. Active ZoLa Site Parameters</h2>
+                <h2>2. Active ZoLa Site Parameters (BBL Linked)</h2>
                 <div class="info-grid">
-                    <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
-                    <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
+                    <div class="info-item"><strong>Parsed 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
                     <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
                     <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
                     <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>

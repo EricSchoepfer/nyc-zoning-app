@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC Pro Zoning Dual-Track Tracker</title>
-    <!-- Links to your separate style sheet file -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,20 +11,27 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Dual Search Engine: Real-Time Address & Tax Lot Calculator</p>
+            <p class="subtitle">Index Filtered Search Engine: Real-Time Address & Tax Lot Calculator</p>
         </header>
 
         <!-- Input Panel Section -->
         <div class="card">
             <h2>1. Select Property Query Path (Address or BBL)</h2>
-            <p>Search via single street address line OR enter direct tax parcel numbers below:</p>
+            <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
             
             <div class="search-grid">
-                <!-- Track A: Address Input Panel -->
+                <!-- Track A: Index-Filtered Address Input Panel -->
                 <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
                     <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
-                    <div style="margin-top: 10px;">
-                        <input type="text" id="addressInput" placeholder="e.g. 54-11 Queens Boulevard" value="54-11 Queens Boulevard">
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <select id="addressBoroSelect" style="width: 45%;">
+                            <option value="BK">Brooklyn</option>
+                            <option value="MN">Manhattan</option>
+                            <option value="QN">Queens</option>
+                            <option value="BX">Bronx</option>
+                            <option value="SI">Staten Island</option>
+                        </select>
+                        <input type="text" id="addressInput" placeholder="e.g. 124 Grand Avenue" value="124 Grand Avenue">
                     </div>
                     <button type="button" id="addressBtn">Search Address Profile</button>
                 </div>
@@ -36,18 +42,18 @@
                     <div class="bbl-box">
                         <div>
                             <select id="boroughInput">
+                                <option value="3">3 - Brooklyn</option>
                                 <option value="1">1 - Manhattan</option>
                                 <option value="2">2 - Bronx</option>
-                                <option value="3">3 - Brooklyn</option>
-                                <option value="4" selected>4 - Queens</option>
+                                <option value="4">4 - Queens</option>
                                 <option value="5">5 - Staten Island</option>
                             </select>
                         </div>
                         <div>
-                            <input type="text" id="blockInput" placeholder="Block" value="1323">
+                            <input type="text" id="blockInput" placeholder="Block" value="1964">
                         </div>
                         <div>
-                            <input type="text" id="lotInput" placeholder="Lot" value="44">
+                            <input type="text" id="lotInput" placeholder="Lot" value="1">
                         </div>
                     </div>
                     <button type="button" id="bblBtn">Search BBL Profile</button>
@@ -130,7 +136,6 @@
         </div>
     </div>
 
-    <!-- Links to your separate script logic file at the very bottom -->
     <script src="script.js"></script>
 </body>
 </html>

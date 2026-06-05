@@ -17,53 +17,34 @@ const zoningDictionary = {
     "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
 };
 
-let searchTimeout = null;
-
-// TRACK 1: Index-Filtered Address Input Button Handler
-document.getElementById("addressBtn").onclick = function() {
+// TRACK 1: Instant Address Input Button Handler
+document.getElementById("addressBtn").onclick = async function() {
     hideLiveLog();
-    
-    // SYNCHRONIZED SELECTOR LOOKUP: Reads the active dropdown menu to narrow down server load natively
-    var boroSelect = document.getElementById("addressBoroSelect");
-    var boroCode = boroSelect ? boroSelect.value : "BK";
-    
     var addressText = document.getElementById("addressInput").value;
     if (!addressText || addressText.trim() === "") { alert("Please enter an address."); return; }
     
-    document.getElementById("addressBtn").innerText = "Pausing for safety...";
-    document.getElementById("addressBtn").disabled = true;
-
-    // AUTOMATED TIMEOUT FILTER: Restricts button flooding to protect your connection pipeline
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(async function() {
-        document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
-        
-        // LIGHTWEIGHT STRATEGY: Points to the live master database and filters by borough to stop connection drops
-        var url = "https://cityofnewyork.us" + boroCode + "&$where=address%20like%20%27%25" + encodeURIComponent(addressText.trim().toUpperCase()) + "%25%27&$limit=1";
-        await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
-    }, 750);
+    document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
+    var upperAddress = addressText.trim().toUpperCase();
+    
+    // Direct, unfiltered live data track connection
+    var url = "https://cityofnewyork.us" + encodeURIComponent(upperAddress) + "%25%27&$limit=1";
+    await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
 
-// TRACK 2: Borough/Block/Lot Button Handler
-document.getElementById("bblBtn").onclick = function() {
+// TRACK 2: Instant Borough/Block/Lot Button Handler
+document.getElementById("bblBtn").onclick = async function() {
     hideLiveLog();
     var boro = document.getElementById("boroughInput").value;
     var blockRaw = document.getElementById("blockInput").value;
     var lotRaw = document.getElementById("lotInput").value;
     if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") { alert("Fill out BBL fields."); return; }
     
-    document.getElementById("bblBtn").innerText = "Pausing for safety...";
-    document.getElementById("bblBtn").disabled = true;
-
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(async function() {
-        document.getElementById("bblBtn").innerText = "Assembling Live Map...";
-        var block = String(blockRaw.trim()).padStart(5, '0');
-        var lot = String(lotRaw.trim()).padStart(4, '0');
-        
-        var url = "https://cityofnewyork.us" + boro + block + lot;
-        await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
-    }, 750);
+    document.getElementById("bblBtn").innerText = "Assembling Live Map...";
+    var block = String(blockRaw.trim()).padStart(5, '0');
+    var lot = String(lotRaw.trim()).padStart(4, '0');
+    
+    var url = "https://cityofnewyork.us" + boro + block + lot;
+    await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
 };
 
 function showLiveLog(msg) {
@@ -82,7 +63,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         var data = await res.json();
         
         if (data && data.length > 0) {
-            var record = data[0]; // Isolate array position zero object parameters natively
+            var record = data[0]; 
             finalAddress = record.address || fallbackLabel;
             finalBbl = record.bbl || "N/A";
             finalZoning = record.zonedist1 || "R6";
@@ -90,13 +71,13 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
             finalSpecial = record.spdist1 || "None";
             finalLotArea = parseFloat(record.lotarea) || finalLotArea;
         } else { 
-            showLiveLog("Location not found in active municipal records. Double-check your exact spelling and suffix layout."); 
+            showLiveLog("Location not found in active municipal records. Confirm your spelling or numbers."); 
         }
     } catch (err) { 
-        showLiveLog("API Connection roadblock. Reverting to local fallback tracks."); 
+        showLiveLog("API Connection roadblock. Reverting to local tracks."); 
     }
 
-    // Print values directly to visible fields
+    // Print values to screen fields
     document.getElementById("infoAddress").innerText = finalAddress;
     document.getElementById("infoBbl").innerText = finalBbl;
     document.getElementById("infoZoning").innerText = finalZoning;
@@ -104,11 +85,11 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     document.getElementById("infoSpecial").innerText = finalSpecial;
     document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-    // PURE REGEX CLEANER: Strips sub-suffixes safely without triggering list split errors (e.g. "R7-1" -> "R7")
+    // Clean sub-suffixes safely (e.g. "R7-1" -> "R7")
     var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-    if (zoneMatch && zoneMatch[0]) {
-        cleanKey = zoneMatch[0];
+    if (zoneMatch && zoneMatch[1]) {
+        cleanKey = zoneMatch[1];
     } else {
         cleanKey = cleanKey.substring(0, 2);
     }
@@ -144,3 +125,9 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Standalone residential and community facility options govern footprints.</td><td>" + specialNotice + "</td></tr>" +
         "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Minimum lot size criteria determine subdivide allowances.</td><td>Contextual profiles protect pre-existing historic lines.</td></tr>" +
         "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Floor Area Ratio (FAR) Max</td><td>Baseline caps floor area at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF).</td><td>UAP expands density up to <b>" + lookup.uapFar.toFixed(2) + " FAR</b> (" + uapMaxZfa.toLocaleString() + " Max SF).</td></tr>" +
+        "<tr><td><b>ZR 23-431 / 34-111</b></td><td>Yard & Setback Regulations</td><td>Rear open space yards scale back building lines from lot perimeters.</td><td>Zero-lot-line commercial footprints drop yard constraints fully.</td></tr>" +
+        "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
+
+    document.getElementById("resultsWrapper").style.display = "block";
+    document.getElementById(buttonId).innerText = originalButtonText;
+};

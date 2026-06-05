@@ -25,72 +25,79 @@ const zoningDictionary = {
 
 let searchTimeout = null;
 
-// TRACK A: Street Address Lookup
-document.getElementById("addressBtn").onclick = function() {
-  hideLiveLog();
-  var boroCode = document.getElementById("addressBoroSelect").value;
-  var addressText = document.getElementById("addressInput").value;
+window.addEventListener("DOMContentLoaded", () => {
+  // TRACK A: Street Address Lookup Wireframe
+  const addressBtn = document.getElementById("addressBtn");
+  if (addressBtn) {
+    addressBtn.onclick = function() {
+      hideLiveLog();
+      var boroCode = document.getElementById("addressBoroSelect").value;
+      var addressText = document.getElementById("addressInput").value;
 
-  if (!addressText || addressText.trim() === "") {
-    alert("Please enter an address.");
-    return;
+      if (!addressText || addressText.trim() === "") {
+        alert("Please enter an address.");
+        return;
+      }
+
+      addressBtn.innerText = "Pausing for safety...";
+      addressBtn.disabled = true;
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async function() {
+        try {
+          addressBtn.innerText = "Querying ZoLa Engine...";
+          var fullBoroMap = { "MN": "Manhattan", "BX": "Bronx", "BK": "Brooklyn", "QN": "Queens", "SI": "Staten Island" };
+          var searchString = addressText.trim() + ", " + fullBoroMap[boroCode] + ", NY";
+          
+          // Mimics a browser searching directly on ZoLa via the Planning Labs search index gateway
+          var url = "https://planninglabs.nyc" + encodeURIComponent(searchString);
+
+          await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile", true);
+        } catch(err) {
+          resetButton("addressBtn", "Search Address Profile");
+          showLiveLog("ZoLa network link interface dropped response maps.");
+        }
+      }, 750);
+    };
   }
 
-  document.getElementById("addressBtn").innerText = "Pausing for safety...";
-  document.getElementById("addressBtn").disabled = true;
+  // TRACK B: Borough/Block/Lot Lookup Wireframe
+  const bblBtn = document.getElementById("bblBtn");
+  if (bblBtn) {
+    bblBtn.onclick = function() {
+      hideLiveLog();
+      var boro = document.getElementById("boroughInput").value;
+      var blockRaw = document.getElementById("blockInput").value;
+      var lotRaw = document.getElementById("lotInput").value;
 
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(async function() {
-    try {
-      document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
-      var fullBoroMap = { "MN": "MANHATTAN", "BX": "BRONX", "BK": "BROOKLYN", "QN": "QUEENS", "SI": "STATEN ISLAND" };
-      var cleanAddress = addressText.trim().toUpperCase();
-      
-      // Fixed SoQL Direct API Entry Point for Address Matching
-      var url = "https://cityofnewyork.us?" +
-                "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
-                "&address=" + encodeURIComponent(cleanAddress);
+      if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
+        alert("Fill out BBL fields.");
+        return;
+      }
 
-      await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
-    } catch(err) {
-      resetButton("addressBtn", "Search Address Profile");
-      showLiveLog("Address dispatch failure occurred.");
-    }
-  }, 750);
-};
+      bblBtn.innerText = "Pausing for safety...";
+      bblBtn.disabled = true;
 
-// TRACK B: Borough/Block/Lot Lookup
-document.getElementById("bblBtn").onclick = function() {
-  hideLiveLog();
-  var boro = document.getElementById("boroughInput").value;
-  var blockRaw = document.getElementById("blockInput").value;
-  var lotRaw = document.getElementById("lotInput").value;
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async function() {
+        try {
+          bblBtn.innerText = "Connecting Tax Map...";
+          var block = String(blockRaw.trim()).padStart(5, '0');
+          var lot = String(lotRaw.trim()).padStart(4, '0');
+          var computedBbl = boro + block + lot;
 
-  if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
-    alert("Fill out BBL fields.");
-    return;
+          // Hits ZoLa's reverse geographical coordinate parsing API directly by specific tax block/lot keys
+          var url = "https://cityofnewyork.us" + computedBbl;
+
+          await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile", false);
+        } catch(err) {
+          resetButton("bblBtn", "Search BBL Profile");
+          showLiveLog("Tax API routing layout failure occurred.");
+        }
+      }, 750);
+    };
   }
-
-  document.getElementById("bblBtn").innerText = "Pausing for safety...";
-  document.getElementById("bblBtn").disabled = true;
-
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(async function() {
-    try {
-      document.getElementById("bblBtn").innerText = "Assembling Live Map...";
-      var block = String(blockRaw.trim()).padStart(5, '0');
-      var lot = String(lotRaw.trim()).padStart(4, '0');
-      var computedBbl = boro + block + lot;
-
-      var url = "https://cityofnewyork.us?bbl=" + computedBbl;
-
-      await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
-    } catch(err) {
-      resetButton("bblBtn", "Search BBL Profile");
-      showLiveLog("BBL dispatch failure occurred.");
-    }
-  }, 750);
-};
+});
 
 function resetButton(buttonId, originalButtonText) {
   var btn = document.getElementById(buttonId);
@@ -102,46 +109,77 @@ function resetButton(buttonId, originalButtonText) {
 
 function showLiveLog(msg) {
   var logger = document.getElementById("liveLog");
-  logger.innerText = "System Notice: " + msg;
-  logger.style.display = "block";
+  if (logger) {
+    logger.innerText = "System Notice: " + msg;
+    logger.style.display = "block";
+  }
 }
 
 function hideLiveLog() {
-  document.getElementById("liveLog").style.display = "none";
+  var logger = document.getElementById("liveLog");
+  if (logger) logger.style.display = "none";
 }
 
-// LIVE PIPELINE COMPILER ENGINE
-async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText) {
+// LIVE PIPELINE COMPILER ENGINE - DUAL SCHEMATIC PARSER
+async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText, isZoLaGeosearch) {
   var finalAddress = fallbackLabel, finalBbl = "N/A", finalZoning = "R6", finalOverlay = "None", finalSpecial = "None", finalLotArea = 4000;
 
   try {
     var res = await fetch(queryUrl);
-    if (!res.ok) throw new Error("Network response error");
+    if (!res.ok) throw new Error("Server transmission error");
     var data = await res.json();
 
-    if (data && data.length > 0) {
-      var record = data[0]; // FIX 1: Extract the first record object array map correctly
-      
-      finalAddress = record.address || fallbackLabel;
-      finalBbl = record.bbl || "N/A";
-      finalZoning = record.zonedist1 || "R6";
-      finalOverlay = record.overlay1 || "None";
-      finalSpecial = record.spdist1 || "None";
-      finalLotArea = parseFloat(record.lotarea) || finalLotArea;
-      
-      document.getElementById("resultsWrapper").style.display = "block";
+    if (isZoLaGeosearch) {
+      // TRACK A: Processes standard browser payload structures used natively by ZoLa's autocomplete UI
+      if (data && data.features && data.features.length > 0) {
+        var properties = data.features[0].properties;
+        finalAddress = properties.label || fallbackLabel;
+        finalBbl = properties.pad_bbl || "N/A";
+        
+        // Secondary execution link chain fetches specific zoning shapes utilizing the recovered BBL code configuration
+        if (finalBbl !== "N/A") {
+          var backupUrl = "https://cityofnewyork.us" + finalBbl;
+          var backupRes = await fetch(backupUrl);
+          if (backupRes.ok) {
+            var backupData = await backupRes.json();
+            if (backupData && backupData.length > 0) {
+              var plutoRecord = backupData[0];
+              finalZoning = plutoRecord.zonedist1 || "R6";
+              finalOverlay = plutoRecord.overlay1 || "None";
+              finalSpecial = plutoRecord.spdist1 || "None";
+              finalLotArea = parseFloat(plutoRecord.lotarea) || finalLotArea;
+            }
+          }
+        }
+        document.getElementById("resultsWrapper").style.display = "block";
+      } else {
+        showLiveLog("ZoLa text engine could not match address spelling string layouts.");
+      }
     } else {
-      showLiveLog("Location not found in active municipal records. Double-check your spelling or criteria.");
+      // TRACK B: Direct tax registry extraction format parameters 
+      if (data && data.length > 0) {
+        var record = data[0];
+        finalAddress = record.address || fallbackLabel;
+        finalBbl = record.bbl || "N/A";
+        finalZoning = record.zonedist1 || "R6";
+        finalOverlay = record.overlay1 || "None";
+        finalSpecial = record.spdist1 || "None";
+        finalLotArea = parseFloat(record.lotarea) || finalLotArea;
+        
+        document.getElementById("resultsWrapper").style.display = "block";
+      } else {
+        showLiveLog("BBL coordinates match no registered municipal footprint records.");
+      }
     }
   } catch (err) {
-    showLiveLog("API Connection roadblock. Verify parameters or check service pools.");
+    showLiveLog("Connection sequence stalled inside remote data pools.");
     console.error(err);
   }
 
-  // FIX 2: Global structural recovery loop resets buttons instantly regardless of script exceptions
+  // Safety Unlock sequence overrides interface freeze anomalies 
   resetButton(buttonId, originalButtonText);
 
-  // Render raw values directly out to HTML interface blocks
+  // Write variables straight to DOM target nodes
   document.getElementById("infoAddress").innerText = finalAddress;
   document.getElementById("infoBbl").innerText = finalBbl;
   document.getElementById("infoZoning").innerText = finalZoning;
@@ -149,37 +187,12 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   document.getElementById("infoSpecial").innerText = finalSpecial;
   document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Suffix Stripping String Parser Machine
+  // Regex string extractor removes design suffix masks without array mutation drops
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-  
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; // FIX 3: Pull single string token item out instead of overwriting with the full RegExp Array object
+    cleanKey = zoneMatch[1];
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
 
-  // Dictionary Lookup Fallbacks
-  var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { 
-    stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." 
-  };
-
-  var stdMaxZfa = Math.round(finalLotArea * lookup.stdFar);
-  var uapMaxZfa = Math.round(finalLotArea * lookup.uapFar);
-
-  document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
-  document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
-  document.getElementById("lblUapFar").innerText = lookup.uapFar.toFixed(2) + " FAR";
-  document.getElementById("lblUapMaxSf").innerText = "Max Capacity: " + uapMaxZfa.toLocaleString() + " ZFA SF";
-
-  document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
-  document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
-
-  var firstLetter = cleanKey.charAt(0);
-  if (finalOverlay !== "None" && finalOverlay !== "") {
-    document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + finalOverlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
-  } else if (firstLetter === "C") {
-    document.getElementById("commUseText").innerHTML = "<b>Permitted (Commercial Zone):</b><br>Broad commercial retail operations allowed across all floorplates.";
-  } else if (firstLetter === "M") {
-    document.getElementById("commUseText").innerHTML = "<b>Permitted (Manufacturing Zone):</b><br>Allows automotive repair workshops, freight hubs, and warehouses.";
-  } else {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Pro Zoning BBL Analysis Tool</title>
+    <title>NYC Pro Zoning Dual-Track Tracker</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -14,7 +14,6 @@
             --bg-main: #f3f4f6;
             --border-color: #e5e7eb;
             --mandatory-color: #ef4444;
-            --conditional-color: #f59e0b;
         }
         body { font-family: Arial, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -25,11 +24,14 @@
         h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary-color); border-bottom: 2px solid var(--primary-light); padding-bottom: 6px; }
         p { font-size: 0.85rem; color: var(--text-muted); margin-top: -4px; }
         
-        .bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
-        select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
+        .search-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-top: 15px; }
+        .bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
         
-        .action-btn { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; display: block; text-align: center; }
-        .action-btn:hover { background-color: #0f766e; }
+        select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
+        select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
+        
+        button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
+        button:hover { background-color: #0f766e; }
         
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
         .info-item { padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem; }
@@ -42,6 +44,8 @@
         .metric-box { background-color: #fff; border: 2px solid var(--border-color); border-radius: 6px; padding: 15px; text-align: center; }
         .metric-val { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
         .metric-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: bold; }
+        
+        #liveLog { display: none; padding: 12px; background-color: #fee2e2; border-left: 4px solid var(--mandatory-color); color: #991b1b; font-size: 0.85rem; border-radius: 4px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -49,44 +53,61 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Tax Lot BBL Data Engine: Live Allowed Uses & ZFA Calculator</p>
+            <p class="subtitle">Dual Search Engine: Real-Time Address & Tax Lot Calculator</p>
         </header>
 
+        <!-- Input Panel Section -->
         <div class="card">
-            <h2>1. Enter Property Tax Map Identifiers (Pre-filled Sandbox Mode)</h2>
-            <p>The form fields are pre-loaded with your 54-11 Queens Boulevard parcel data. Click the button directly to check execution:</p>
+            <h2>1. Select Property Query Path (Address or BBL)</h2>
+            <p>Search via single street address line OR enter direct tax parcel numbers below:</p>
             
-            <div class="bbl-box">
-                <div>
-                    <select id="boroughInput">
-                        <option value="1">1 - Manhattan</option>
-                        <option value="2">2 - Bronx</option>
-                        <option value="3">3 - Brooklyn</option>
-                        <option value="4" selected>4 - Queens</option>
-                        <option value="5">5 - Staten Island</option>
-                    </select>
+            <div class="search-grid">
+                <!-- Track A: Address Input Panel -->
+                <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
+                    <strong style="font-size: 0.85rem; color: var(--primary-color);">Option A: Search by Street Address</strong>
+                    <div style="margin-top: 10px;">
+                        <input type="text" id="addressInput" placeholder="e.g. 54-11 Queens Boulevard" value="54-11 Queens Boulevard">
+                    </div>
+                    <button type="button" id="addressBtn">Search Address Profile</button>
                 </div>
+                
+                <!-- Track B: BBL Input Panel -->
                 <div>
-                    <input type="text" id="blockInput" placeholder="Enter Block (e.g. 1323)" value="1323">
-                </div>
-                <div>
-                    <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)" value="44">
-                </div>
-                <div style="display: flex; align-items: flex-end;">
-                    <!-- SOLID EMBED: Standard button ID hook connected globally inside the script layout below -->
-                    <button type="button" class="action-btn" id="searchBtn">Run BBL Query</button>
+                    <strong style="font-size: 0.85rem; color: var(--primary-color);">Option B: Search by Borough/Block/Lot</strong>
+                    <div class="bbl-box">
+                        <div>
+                            <select id="boroughInput">
+                                <option value="1">1 - Manhattan</option>
+                                <option value="2">2 - Bronx</option>
+                                <option value="3">3 - Brooklyn</option>
+                                <option value="4" selected>4 - Queens</option>
+                                <option value="5">5 - Staten Island</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="text" id="blockInput" placeholder="Block" value="1323">
+                        </div>
+                        <div>
+                            <input type="text" id="lotInput" placeholder="Lot" value="44">
+                        </div>
+                    </div>
+                    <button type="button" id="bblBtn">Search BBL Profile</button>
                 </div>
             </div>
+            
+            <!-- System Logger Feedback Panel -->
+            <div id="liveLog"></div>
         </div>
 
-        <!-- Workspace Elements (Hidden by default) -->
+        <!-- Display Layout Sheets Workspace -->
         <div id="resultsWrapper" style="display: none;">
             
             <!-- Result Parameters Dashboard -->
             <div class="card">
-                <h2>2. Active ZoLa Site Parameters (BBL Linked)</h2>
+                <h2>2. Active ZoLa Site Parameters</h2>
                 <div class="info-grid">
-                    <div class="info-item"><strong>Parsed 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
+                    <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
+                    <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
                     <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
                     <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
                     <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
@@ -139,21 +160,3 @@
                         <tr>
                             <th width="15%">ZR Citation</th>
                             <th width="20%">Zoning Parameter</th>
-                            <th width="32%">Standard Baseline Path</th>
-                            <th width="33%">Bonus / Contextual Path</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-
-        </div>
-    </div>
-
-    <script>
-        const zoningDictionary = {
-            "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences (Use Group I).", cfUses: "Basic neighborhood community facilities, houses of worship." },
-            "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic neighborhood community facilities, houses of worship." },
-            "R3": { stdFar: 0.50, uapFar: 0.60, resUses: "Low-Rise Detached, Semi-Detached, and Multi-Family Contextual profiles.", cfUses: "Houses of worship, medical clinics, schools, clubs." },
-            "R4": { stdFar: 0.75, uapFar: 0.90, resUses: "Detached, Semi-Detached rowhouses, and small multi-family garden apartments.", cfUses: "Local schools, houses of worship, medical clinics." },
-            "R5": { stdFar: 1.25, uapFar: 1.65, resUses: "Single/Two-Family Rowhouses, Detached, Semi-Detached and Small Multi-Family Apartments", cfUses: "Houses of worship, medical offices, schools." },

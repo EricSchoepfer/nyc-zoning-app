@@ -46,7 +46,7 @@ document.getElementById("addressBtn").onclick = function() {
     var fullBoroMap = { "MN": "MANHATTAN", "BX": "BRONX", "BK": "BROOKLYN", "QN": "QUEENS", "SI": "STATEN ISLAND" };
     var cleanAddress = addressText.trim().toUpperCase();
     
-    // Live NYC Open Data PLUTO API URL
+    // Official NYC Socrata Open Data PLUTO Endpoint API Engine Link
     var url = "https://cityofnewyork.us?" +
               "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
               "&address=" + encodeURIComponent(cleanAddress);
@@ -104,8 +104,9 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      var record = data[0]; // FIX 1: Access the object record directly inside the array collection
+      var record = data[0]; // FIX 1: Access the exact single object data bucket inside the array container
       
+      // FIX 2: Strict lower-case mapping configuration for production municipal database environments
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
       finalZoning = record.zonedist1 || "R6";
@@ -122,11 +123,11 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     console.error(err);
   }
 
-  // FIX 3: Reset buttons instantly regardless of successful responses or runtime errors
+  // FIX 3: Safety Reset Engine ensures buttons unlock even if the server throws an error or breaks midway
   document.getElementById(buttonId).innerText = originalButtonText;
   document.getElementById(buttonId).disabled = false;
 
-  // Print raw API data fields safely to DOM nodes
+  // Render raw structural properties directly out to user template elements
   document.getElementById("infoAddress").innerText = finalAddress;
   document.getElementById("infoBbl").innerText = finalBbl;
   document.getElementById("infoZoning").innerText = finalZoning;
@@ -134,17 +135,17 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   document.getElementById("infoSpecial").innerText = finalSpecial;
   document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Regex Normalization Machine
+  // Suffix Stripping String Parser Machine
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
   
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; // FIX 2: Correct array element string reference payload matching map profiles
+    cleanKey = zoneMatch[1]; // FIX 4: Pull the index string element from the RegExp array match instead of the full object
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
 
-  // Fallback map layout parameters
+  // Fallback structural object mapper execution properties
   var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { 
     stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." 
   };
@@ -172,8 +173,3 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   }
 
   var specialNotice = "Standard underlying city-wide framework text rules apply.";
-  if (finalSpecial !== "None" && finalSpecial !== "") {
-    specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
-  }
-
-  document.getElementById("tableBody").innerHTML = 

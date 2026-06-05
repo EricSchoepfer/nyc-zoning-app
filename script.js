@@ -32,9 +32,15 @@ document.getElementById("addressBtn").onclick = async function() {
   document.getElementById("addressBtn").disabled = true;
 
   var fullBoroMap = { "BK": "BROOKLYN", "MN": "MANHATTAN", "QN": "QUEENS", "BX": "BRONX", "SI": "STATEN ISLAND" };
-  var url = "https://cityofnewyork.us" + 
-            encodeURIComponent(fullBoroMap[boroCode]) + 
-            "&address=" + encodeURIComponent(addressText.trim().toUpperCase());
+  var cleanAddress = addressText.trim().toUpperCase().replace(/\./g, "");
+  
+  // Standard format normalization helper (e.g. AVENUE -> AVE)
+  cleanAddress = cleanAddress.replace(/ AVENUE$/, " AVE").replace(/ STREET$/, " ST").replace(/ ROAD$/, " RD").replace(/ BOULEVARD$/, " BLVD");
+
+  // SoQL $where text matching layout prevents silent array drop mutations
+  var url = "https://cityofnewyork.us?" +
+            "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
+            "&$where=address LIKE '" + encodeURIComponent(cleanAddress) + "%'";
 
   await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
@@ -56,7 +62,11 @@ document.getElementById("bblBtn").onclick = async function() {
 
   var block = String(blockRaw.trim()).padStart(5, '0');
   var lot = String(lotRaw.trim()).padStart(4, '0');
-  var url = "https://cityofnewyork.us" + (boro + block + lot);
+  
+  // SoQL cast handler matches text vs numeric column indexing schemas seamlessly
+  var rawBbl = boro + block + lot;
+  var url = "https://cityofnewyork.us?" +
+            "&$where=bbl=" + rawBbl + " OR bbl='" + rawBbl + "'";
 
   await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
 };
@@ -80,7 +90,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      // FIX: Read properties strictly out of the first array element [0] returned by Socrata
+      // Targets the first valid matching dictionary record object item inside the collection payload array
       var record = data[0]; 
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
@@ -91,18 +101,18 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       
       document.getElementById("resultsWrapper").style.display = "block";
     } else {
-      showLiveLog("Location not found in active municipal records. Check exact spelling.");
+      showLiveLog("Location not found in active municipal records. Try using alternative abbreviations (e.g. Ave vs Avenue).");
     }
   } catch (err) {
     showLiveLog("API Connection roadblock. Reverting to local tracks.");
     console.error(err);
   }
 
-  // Restore button control states
+  // Restore button visibility control states
   document.getElementById(buttonId).innerText = originalButtonText;
   document.getElementById(buttonId).disabled = false;
 
-  // Print values to screen fields
+  // Print values to user interface cards
   document.getElementById("infoAddress").innerText = finalAddress;
   document.getElementById("infoBbl").innerText = finalBbl;
   document.getElementById("infoZoning").innerText = finalZoning;
@@ -110,11 +120,11 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   document.getElementById("infoSpecial").innerText = finalSpecial;
   document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Clean zoning tokens securely without breaking strings
+  // Clean zoning suffix elements safely
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; // FIX: Extract the matched text string value index token accurately
+    cleanKey = zoneMatch[1]; 
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
@@ -153,5 +163,3 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Minimum lot size criteria determine subdivide allowances.</td><td>Contextual profiles protect pre-existing historic lines.</td></tr>" + 
     "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Floor Area Ratio (FAR) Max</td><td>Baseline caps floor area at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF).</td><td>UAP expands density up to <b>" + lookup.uapFar.toFixed(2) + " FAR</b> (" + uapMaxZfa.toLocaleString() + " Max SF).</td></tr>" + 
     "<tr><td><b>ZR 23-431 / 34-111</b></td><td>Yard & Setback Regulations</td><td>Rear open space yards scale back building lines from lot perimeters.</td><td>Zero-lot-line commercial footprints drop yard constraints fully.</td></tr>" + 
-    "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
-}

@@ -26,8 +26,8 @@ document.getElementById("addressBtn").onclick = async function() {
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     var upperAddress = addressText.trim().toUpperCase();
     
-    // FIXED LIVE MASTER DATA ENDPOINT PROTOCOL: Connects straight to the active city database hub
-    var url = "https://cityofnewyork.us" + encodeURIComponent(upperAddress) + "%25%27&$limit=1";
+    // UNBLOCKABLE CARTO ENDPOINT: Bypasses browser cross-origin locks natively
+    var url = "https://carto.com" + encodeURIComponent("SELECT address, bbl, zonedist1, overlay1, spdist1, lotarea FROM mappluto WHERE address LIKE '%" + upperAddress + "%' LIMIT 1");
     await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
 
@@ -42,9 +42,10 @@ document.getElementById("bblBtn").onclick = async function() {
     document.getElementById("bblBtn").innerText = "Assembling Live Map...";
     var block = String(blockRaw.trim()).padStart(5, '0');
     var lot = String(lotRaw.trim()).padStart(4, '0');
+    var computedBbl = boro + block + lot;
     
-    // FIXED LIVE MASTER DATA ENDPOINT PROTOCOL: Connects straight to the active city database hub
-    var url = "https://cityofnewyork.us" + boro + block + lot;
+    // UNBLOCKABLE CARTO ENDPOINT: Bypasses browser cross-origin locks natively
+    var url = "https://carto.com" + encodeURIComponent("SELECT address, bbl, zonedist1, overlay1, spdist1, lotarea FROM mappluto WHERE bbl = " + computedBbl + " LIMIT 1");
     await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
 };
 

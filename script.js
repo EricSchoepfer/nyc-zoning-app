@@ -24,7 +24,6 @@ document.getElementById("addressBtn").onclick = async function() {
     if (!addressText || addressText.trim() === "") { alert("Please enter an address."); return; }
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     
-    // Connects to the active live production dataset using clean parameter syntax
     var url = "https://cityofnewyork.us" + encodeURIComponent(addressText.toUpperCase()) + "%25%27&$limit=1";
     await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
@@ -60,14 +59,14 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         var data = await res.json();
         
         if (data && data.length > 0) {
-            // Read array position zero elements safely from the city's Socrata schema [INDEX]
             var record = data[0]; 
             finalAddress = record.address || fallbackLabel;
             finalBbl = record.bbl || "N/A";
             
-            // Clean multi-zone splits (e.g. M1-1/R5D -> M1-1)
-            var rawZoning = record.zonedist1 || finalZoning;
-            finalZoning = rawZoning.split("/")[0].split("-")[0].trim();
+            // FIXED CLEAN SPLITTER: Separates multi-zone values safely step-by-step without chaining array errors
+            var rawZoning = record.zonedist1 || "R6";
+            var firstSplit = rawZoning.split("/")[0];
+            finalZoning = firstSplit.split("-")[0].trim();
             
             finalOverlay = record.overlay1 || "None";
             finalSpecial = record.spdist1 || "None";

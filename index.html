@@ -1,113 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NYC Pro Zoning Dual-Track Tracker</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Pro Zoning Dual-Track Tracker</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>NYC Zoning Cross-Reference App</h1>
-      <p class="subtitle">Index Filtered Search Engine: Real-Time Address & Tax Lot Calculator</p>
-    </header>
 
-    <!-- 1. Input Panel Section -->
-    <div class="card">
-      <h2>1. Select Property Query Path (Address or BBL)</h2>
-      <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
-      
-      <div class="search-grid">
-        <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
-          <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
-          <div style="margin-top: 10px; display: flex; gap: 8px;">
-            <select id="addressBoroSelect" style="width: 45%;">
-              <option value="BK">Brooklyn</option>
-              <option value="MN">Manhattan</option>
-              <option value="QN">Queens</option>
-              <option value="BX">Bronx</option>
-              <option value="SI">Staten Island</option>
-            </select>
-            <input type="text" id="addressInput" placeholder="e.g. 124 Grand Avenue" value="124 Grand Avenue">
-          </div>
-          <button type="button" id="addressBtn">Search Address Profile</button>
-        </div>
+    <div class="container">
+        <header>
+            <h1>NYC Zoning Cross-Reference App</h1>
+            <p class="subtitle">Index Filtered Search Engine: Real-Time Address & Tax Lot Calculator</p>
+        </header>
 
-        <div>
-          <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
-          <div class="bbl-box">
-            <div>
-              <select id="boroughInput">
-                <option value="3">3 - Brooklyn</option>
-                <option value="1">1 - Manhattan</option>
-                <option value="2">2 - Bronx</option>
-                <option value="4">4 - Queens</option>
-                <option value="5">5 - Staten Island</option>
-              </select>
+        <!-- Input Panel Section -->
+        <div class="card">
+            <h2>1. Select Property Query Path (Address or BBL)</h2>
+            <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
+            
+            <div class="search-grid">
+                <!-- Track A: Index-Filtered Address Input Panel -->
+                <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
+                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <select id="addressBoroSelect" style="width: 45%;">
+                            <option value="BK">Brooklyn</option>
+                            <option value="MN">Manhattan</option>
+                            <option value="QN">Queens</option>
+                            <option value="BX">Bronx</option>
+                            <option value="SI">Staten Island</option>
+                        </select>
+                        <input type="text" id="addressInput" placeholder="e.g. 124 Grand Avenue" value="124 Grand Avenue">
+                    </div>
+                    <button type="button" id="addressBtn">Search Address Profile</button>
+                </div>
+                
+                <!-- Track B: BBL Input Panel -->
+                <div>
+                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
+                    <div class="bbl-box">
+                        <div>
+                            <select id="boroughInput">
+                                <option value="3">3 - Brooklyn</option>
+                                <option value="1">1 - Manhattan</option>
+                                <option value="2">2 - Bronx</option>
+                                <option value="4">4 - Queens</option>
+                                <option value="5">5 - Staten Island</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="text" id="blockInput" placeholder="Block" value="1964">
+                        </div>
+                        <div>
+                            <input type="text" id="lotInput" placeholder="Lot" value="1">
+                        </div>
+                    </div>
+                    <button type="button" id="bblBtn">Search BBL Profile</button>
+                </div>
             </div>
-            <div><input type="text" id="blockInput" placeholder="Block" value="1964"></div>
-            <div><input type="text" id="lotInput" placeholder="Lot" value="1"></div>
-          </div>
-          <button type="button" id="bblBtn">Search BBL Profile</button>
+            
+            <!-- System Logger Feedback Panel -->
+            <div id="liveLog"></div>
         </div>
-      </div>
-      <div id="liveLog"></div>
+
+        <!-- Display Layout Sheets Workspace -->
+        <div id="resultsWrapper" style="display: none;">
+            
+            <!-- Result Parameters Dashboard -->
+            <div class="card">
+                <h2>2. Active ZoLa Site Parameters</h2>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
+                    <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
+                    <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
+                    <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
+                    <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
+                    <div class="info-item"><strong>Lot Square Footage:</strong> <span id="infoLotArea">-</span></div>
+                </div>
+            </div>
+
+            <!-- Dynamic FAR Matrix Output Block -->
+            <div class="card">
+                <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
+                <p>Calculations scaled dynamically using official municipal lot area metrics.</p>
+                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
+                    <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
+                        <div class="metric-label">Standard Baseline FAR</div>
+                        <div class="metric-val" id="lblStdFar">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
+                    </div>
+                    <div class="metric-box" style="border-left: 5px solid #0d9488;">
+                        <div class="metric-label">UAP Affordable Housing FAR</div>
+                        <div class="metric-val" id="lblUapFar">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Allowed Land Uses Matrix -->
+            <div class="card">
+                <h2>4. Complete Use Group Allowance & Mapped Elements Matrix</h2>
+                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                    <div class="info-item" style="background: white; border-color: #1e3a8a;">
+                        <strong style="color: #1e3a8a;">🏠 Allowed Residential Uses</strong>
+                        <div id="resUseText" style="margin-top: 6px; color: #374151;">-</div>
+                    </div>
+                    <div class="info-item" style="background: white; border-color: #0d9488;">
+                        <strong style="color: #0d9488;">🏥 Allowed Community Facility Uses</strong>
+                        <div id="cfUseText" style="margin-top: 6px; color: #374151;">-</div>
+                    </div>
+                    <div class="info-item" style="background: white; border-color: #f59e0b;">
+                        <strong style="color: #f59e0b;">🏭 Allowed Commercial / Overlay Uses</strong>
+                        <div id="commUseText" style="margin-top: 6px; color: #374151;">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reference Table -->
+            <div class="card">
+                <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="15%">ZR Citation</th>
+                            <th width="20%">Zoning Parameter</th>
+                            <th width="32%">Standard Baseline Path</th>
+                            <th width="33%">Bonus / Contextual Path</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+        </div>
     </div>
 
-    <!-- 2. Display Layout Workspace -->
-    <div id="resultsWrapper" style="display: none;">
-      <div class="card">
-        <h2>2. Active ZoLa Site Parameters</h2>
-        <div class="info-grid">
-          <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
-          <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
-          <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
-          <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
-          <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
-          <div class="info-item"><strong>Lot Square Footage:</strong> <span id="infoLotArea">-</span></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-        <p>Calculations scaled dynamically using official municipal lot area metrics.</p>
-        <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
-          <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
-            <div class="metric-label">Standard Baseline FAR</div>
-            <div class="metric-val" id="lblStdFar">-</div>
-            <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
-          </div>
-          <div class="metric-box" style="border-left: 5px solid #0d9488;">
-            <div class="metric-label">UAP Affordable Housing FAR</div>
-            <div class="metric-val" id="lblUapFar">-</div>
-            <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>4. Complete Use Group Allowance & Mapped Elements Matrix</h2>
-        <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-          <div class="info-item" style="background: white; border-color: #1e3a8a;"><strong style="color: #1e3a8a;">🏠 Allowed Residential Uses</strong><div id="resUseText" style="margin-top: 6px; color: #374151;">-</div></div>
-          <div class="info-item" style="background: white; border-color: #0d9488;"><strong style="color: #0d9488;">🏥 Allowed Community Facility Uses</strong><div id="cfUseText" style="margin-top: 6px; color: #374151;">-</div></div>
-          <div class="info-item" style="background: white; border-color: #f59e0b;"><strong style="color: #f59e0b;">🏭 Allowed Commercial / Overlay Uses</strong><div id="commUseText" style="margin-top: 6px; color: #374151;">-</div></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
-        <table>
-          <thead>
-            <tr><th width="15%">ZR Citation</th><th width="20%">Zoning Parameter</th><th width="32%">Standard Baseline Path</th><th width="33%">Bonus / Contextual Path</th></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cache-buster URL parameters clear historic browser loops instantly -->
-  <script src="script.js?v=9.0"></script>
+    <script src="script.js"></script>
 </body>
 </html>

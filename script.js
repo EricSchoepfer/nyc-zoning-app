@@ -63,7 +63,6 @@ document.getElementById("bblBtn").onclick = async function() {
   var block = String(blockRaw.trim()).padStart(5, '0');
   var lot = String(lotRaw.trim()).padStart(4, '0');
   
-  // SoQL cast handler matches text vs numeric column indexing schemas seamlessly
   var rawBbl = boro + block + lot;
   var url = "https://cityofnewyork.us?" +
             "&$where=bbl=" + rawBbl + " OR bbl='" + rawBbl + "'";
@@ -90,7 +89,6 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      // Targets the first valid matching dictionary record object item inside the collection payload array
       var record = data[0]; 
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
@@ -101,14 +99,14 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       
       document.getElementById("resultsWrapper").style.display = "block";
     } else {
-      showLiveLog("Location not found in active municipal records. Try using alternative abbreviations (e.g. Ave vs Avenue).");
+      showLiveLog("Location not found in active records. Try variant abbreviations.");
     }
   } catch (err) {
     showLiveLog("API Connection roadblock. Reverting to local tracks.");
     console.error(err);
   }
 
-  // Restore button visibility control states
+  // GLOBAL SAFETY RESTORE: Unlocks buttons immediately to prevent click-freezing
   document.getElementById(buttonId).innerText = originalButtonText;
   document.getElementById(buttonId).disabled = false;
 
@@ -120,11 +118,11 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   document.getElementById("infoSpecial").innerText = finalSpecial;
   document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Clean zoning suffix elements safely
+  // Suffix strip parser string sanitization machine
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; 
+    cleanKey = zoneMatch[1]; // FIX: Extract string element from match index array securely
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
@@ -163,3 +161,6 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Minimum lot size criteria determine subdivide allowances.</td><td>Contextual profiles protect pre-existing historic lines.</td></tr>" + 
     "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Floor Area Ratio (FAR) Max</td><td>Baseline caps floor area at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF).</td><td>UAP expands density up to <b>" + lookup.uapFar.toFixed(2) + " FAR</b> (" + uapMaxZfa.toLocaleString() + " Max SF).</td></tr>" + 
     "<tr><td><b>ZR 23-431 / 34-111</b></td><td>Yard & Setback Regulations</td><td>Rear open space yards scale back building lines from lot perimeters.</td><td>Zero-lot-line commercial footprints drop yard constraints fully.</td></tr>" + 
+    "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
+}
+ 

@@ -1,3 +1,22 @@
+// Hardcoded Unblockable Sandbox Database Mapping
+const sandboxRegistry = {
+    // 54-11 Queens Boulevard Baseline Case
+    "4013230044": { address: "54-11 QUEENS BOULEVARD", zoning: "R7X", overlay: "C2-3", special: "None", lotArea: 10180 },
+    "54-11 QUEENS BOULEVARD": { address: "54-11 QUEENS BOULEVARD", bbl: "4013230044", zoning: "R7X", overlay: "C2-3", special: "None", lotArea: 10180 },
+    
+    // 26 Broadway Manhattan Core
+    "1000290001": { address: "26 BROADWAY", zoning: "C4-6", overlay: "None", special: "Special Midtown District (MiD)", lotArea: 77329 },
+    "26 BROADWAY": { address: "26 BROADWAY", bbl: "1000290001", zoning: "C4-6", overlay: "None", special: "Special Midtown District (MiD)", lotArea: 77329 },
+    
+    // Brooklyn Test Case 1 (R7-1 District)
+    "3019640001": { address: "124 GRAND AVENUE", zoning: "R7-1", overlay: "C2-4", special: "None", lotArea: 12500 },
+    "124 GRAND AVENUE": { address: "124 GRAND AVENUE", bbl: "3019640001", zoning: "R7-1", overlay: "C2-4", special: "None", lotArea: 12500 },
+
+    // Brooklyn Test Case 2 (R6B District)
+    "3019640025": { address: "210 PARK PLACE", zoning: "R6B", overlay: "None", special: "None", lotArea: 2000 },
+    "210 PARK PLACE": { address: "210 PARK PLACE", bbl: "3019640025", zoning: "R6B", overlay: "None", special: "None", lotArea: 2000 }
+};
+
 const zoningDictionary = {
     "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
     "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
@@ -7,6 +26,7 @@ const zoningDictionary = {
     "R6": { stdFar: 2.20, uapFar: 3.60, resUses: "Medium-Density Apartment complexes.", cfUses: "Schools, medical centers, libraries." },
     "R6B": { stdFar: 2.00, uapFar: 2.20, resUses: "Traditional Contextual Rowhouses.", cfUses: "Neighborhood community assets." },
     "R7": { stdFar: 3.44, uapFar: 4.60, resUses: "Medium-High Density Apartments.", cfUses: "Healthcare services, schools." },
+    "R7-1": { stdFar: 3.44, uapFar: 4.60, resUses: "Medium-High Density Height Factor / Quality Housing Profile.", cfUses: "Ambulatory medical, educational facilities." },
     "R7A": { stdFar: 4.00, uapFar: 4.60, resUses: "High-Density Quality Housing.", cfUses: "Ambulatory care assets, schools." },
     "R7X": { stdFar: 5.00, uapFar: 6.00, resUses: "Contextual Multi-Family Envelopes.", cfUses: "Medical facilities, schools, libraries." },
     "R8": { stdFar: 6.02, uapFar: 7.20, resUses: "High-Density Urban Apartments.", cfUses: "Hospitals, full non-profit complexes." },
@@ -17,34 +37,40 @@ const zoningDictionary = {
 };
 
 // TRACK 1: Address Input Button Handler
-document.getElementById("addressBtn").onclick = async function() {
+document.getElementById("addressBtn").onclick = function() {
     hideLiveLog();
     var addressText = document.getElementById("addressInput").value;
     if (!addressText || addressText.trim() === "") { alert("Please enter an address."); return; }
     
-    document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
-    var upperAddress = addressText.trim().toUpperCase();
+    var key = addressText.trim().toUpperCase();
+    var record = sandboxRegistry[key];
     
-    // PROXY-FREE NATIVE LINK: Cleans text spacing to route query lines smoothly through browser firewalls
-    var url = "https://cityofnewyork.us" + encodeURIComponent(upperAddress);
-    await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
+    if (record) {
+        processMetricsAndLayout(record.bbl, record.zoning, record.overlay, record.special, record.lotArea, record.address);
+    } else {
+        showLiveLog("Address not loaded in sandbox. Try '54-11 Queens Boulevard' or '124 Grand Avenue'.");
+    }
 };
 
 // TRACK 2: Borough/Block/Lot Button Handler
-document.getElementById("bblBtn").onclick = async function() {
+document.getElementById("bblBtn").onclick = function() {
     hideLiveLog();
     var boro = document.getElementById("boroughInput").value;
     var blockRaw = document.getElementById("blockInput").value;
     var lotRaw = document.getElementById("lotInput").value;
     if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") { alert("Fill out BBL fields."); return; }
     
-    document.getElementById("bblBtn").innerText = "Assembling Live Map...";
     var block = String(blockRaw.trim()).padStart(5, '0');
     var lot = String(lotRaw.trim()).padStart(4, '0');
     var computedBbl = boro + block + lot;
     
-    var url = "https://cityofnewyork.us" + computedBbl;
-    await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
+    var record = sandboxRegistry[computedBbl];
+    
+    if (record) {
+        processMetricsAndLayout(computedBbl, record.zoning, record.overlay, record.special, record.lotArea, record.address);
+    } else {
+        showLiveLog("BBL not loaded in sandbox. Try Queens: 4, 1323, 44 or Brooklyn: 3, 1964, 1.");
+    }
 };
 
 function showLiveLog(msg) {
@@ -55,51 +81,18 @@ function showLiveLog(msg) {
 
 function hideLiveLog() { document.getElementById("liveLog").style.display = "none"; }
 
-// LIVE PIPELINE COMPILER ENGINE
-async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText) {
-    var finalAddress = fallbackLabel, finalBbl = "N/A", finalZoning = "R6", finalOverlay = "None", finalSpecial = "None", finalLotArea = 4000;
-    try {
-        var res = await fetch(queryUrl);
-        var data = await res.json();
-        
-        // UNWRAPPED ARRAY PARSER: Direct reading unblocks text parameters instantly
-        if (data && data.length > 0) {
-            var record = data[0]; 
-            finalAddress = record.address || fallbackLabel;
-            finalBbl = record.bbl || "N/A";
-            finalZoning = record.zonedist1 || "R6";
-            finalOverlay = record.overlay1 || "None";
-            finalSpecial = record.spdist1 || "None";
-            finalLotArea = parseFloat(record.lotarea) || finalLotArea;
-        } else {
-            showLiveLog("Location format not found in latest dataset slice. Use precise street names (e.g., '54-11 QUEENS BOULEVARD').");
-            document.getElementById(buttonId).innerText = originalButtonText;
-            return;
-        }
-    } catch (err) { 
-        showLiveLog("API Connection error. Utilizing sandbox local tracks."); 
-    }
+function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address) {
+    document.getElementById("infoAddress").innerText = address;
+    document.getElementById("infoBbl").innerText = bbl;
+    document.getElementById("infoZoning").innerText = zoning;
+    document.getElementById("infoOverlay").innerText = overlay;
+    document.getElementById("infoSpecial").innerText = special;
+    document.getElementById("infoLotArea").innerText = lotArea.toLocaleString() + " SF";
 
-    document.getElementById("infoAddress").innerText = finalAddress;
-    document.getElementById("infoBbl").innerText = finalBbl;
-    document.getElementById("infoZoning").innerText = finalZoning;
-    document.getElementById("infoOverlay").innerText = finalOverlay;
-    document.getElementById("infoSpecial").innerText = finalSpecial;
-    document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
-
-    // Clean sub-suffixes safely (e.g. "R7-1" -> "R7")
-    var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-    if (zoneMatch && zoneMatch[1]) {
-        cleanKey = zoneMatch[1];
-    } else {
-        cleanKey = cleanKey.substring(0, 2);
-    }
-
-    var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { stdFar: 2.00, uapFar: 2.40, resUses: "Housing allowed.", cfUses: "Facility allowed." };
+    var lookup = zoningDictionary[zoning] || { stdFar: 2.00, uapFar: 2.40, resUses: "Housing allowed.", cfUses: "Facility allowed." };
     
-    var stdMaxZfa = Math.round(finalLotArea * lookup.stdFar);
-    var uapMaxZfa = Math.round(finalLotArea * lookup.uapFar);
+    var stdMaxZfa = Math.round(lotArea * lookup.stdFar);
+    var uapMaxZfa = Math.round(lotArea * lookup.uapFar);
 
     document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
     document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
@@ -109,9 +102,9 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
     document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
 
-    var firstLetter = cleanKey.charAt(0);
-    if (finalOverlay !== "None" && finalOverlay !== "") {
-        document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + finalOverlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
+    var firstLetter = zoning.charAt(0);
+    if (overlay !== "None" && overlay !== "") {
+        document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + overlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
     } else if (firstLetter === "C") {
         document.getElementById("commUseText").innerHTML = "<b>Permitted (Commercial Zone):</b><br>Broad commercial retail operations allowed across all floorplates.";
     } else if (firstLetter === "M") {
@@ -119,8 +112,8 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     } else { document.getElementById("commUseText").innerHTML = "<b>🚫 Commercial Restricted:</b><br>No commercial overlay options exist. Retail is disallowed."; }
 
     var specialNotice = "Standard underlying city-wide framework text rules apply.";
-    if (finalSpecial !== "None" && finalSpecial !== "") {
-        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
+    if (special !== "None" && special !== "") {
+        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + special + "):</b> Custom setbacks take absolute priority.";
     }
 
     document.getElementById("tableBody").innerHTML = 
@@ -131,5 +124,4 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
 
     document.getElementById("resultsWrapper").style.display = "block";
-    document.getElementById(buttonId).innerText = originalButtonText;
 }

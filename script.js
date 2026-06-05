@@ -1,8 +1,8 @@
 // Hardcoded Unblockable Sandbox Database Mapping
 const sandboxRegistry = {
     // 54-11 Queens Boulevard Baseline Case
-    "4013230044": { address: "54-11 QUEENS BOULEVARD", zoning: "R7X", overlay: "C2-3", special: "None", lotArea: 10180 },
-    "54-11 QUEENS BOULEVARD": { address: "54-11 QUEENS BOULEVARD", bbl: "4013230044", zoning: "R7X", overlay: "C2-3", special: "None", lotArea: 10180 },
+    "4002240022": { address: "37-02 QUEENS BOULEVARD", zoning: "M1-4", overlay: "None", special: "None", lotArea: 19508 },
+    "37-02 QUEENS BOULEVARD": { address: "37-02 QUEENS BOULEVARD", bbl: "4002240022", zoning: "M1-4", overlay: "None", special: "None", lotArea: 19508 },
     
     // 26 Broadway Manhattan Core
     "1000290001": { address: "26 BROADWAY", zoning: "C4-6", overlay: "None", special: "Special Midtown District (MiD)", lotArea: 77329 },

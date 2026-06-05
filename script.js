@@ -196,4 +196,3 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
   var table = document.getElementById("tableBody");
   if (table) {
-

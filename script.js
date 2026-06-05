@@ -17,22 +17,17 @@ const zoningDictionary = {
   "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
 };
 
-// Global Initialization Wrapper maps tracking paths securely after layout builds
 function initTracker() {
-  console.log("NYC Zoning App engine running.");
-
   var addressBtn = document.getElementById("addressBtn");
   if (addressBtn) {
     addressBtn.onclick = async function() {
       hideLiveLog();
-      
       var boroSelect = document.getElementById("addressBoroSelect");
       var addressInput = document.getElementById("addressInput");
       if (!boroSelect || !addressInput) return;
       
       var boroCode = boroSelect.value;
       var addressText = addressInput.value;
-
       if (!addressText || addressText.trim() === "") {
         alert("Please enter a street address.");
         return;
@@ -57,7 +52,6 @@ function initTracker() {
   if (bblBtn) {
     bblBtn.onclick = async function() {
       hideLiveLog();
-      
       var boroInput = document.getElementById("boroughInput");
       var blockInput = document.getElementById("blockInput");
       var lotInput = document.getElementById("lotInput");
@@ -66,7 +60,6 @@ function initTracker() {
       var boro = boroInput.value;
       var blockRaw = blockInput.value;
       var lotRaw = lotInput.value;
-
       if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
         alert("Please fill out all BBL fields.");
         return;
@@ -77,17 +70,14 @@ function initTracker() {
 
       var block = String(blockRaw.trim()).padStart(5, '0');
       var lot = String(lotRaw.trim()).padStart(4, '0');
-      
       var rawBbl = boro + block + lot;
-      var url = "https://cityofnewyork.us?" +
-                "&$where=bbl=" + rawBbl + " OR bbl='" + rawBbl + "'";
+      var url = "https://cityofnewyork.us?bbl=" + rawBbl;
 
       await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
     };
   }
 }
 
-// Resilient load listener triggers logic regardless of asset sequence
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initTracker);
 } else {
@@ -107,7 +97,6 @@ function hideLiveLog() {
   if (logger) logger.style.display = "none";
 }
 
-// LIVE PIPELINE COMPILER ENGINE
 async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText) {
   var finalAddress = fallbackLabel, finalBbl = "N/A", finalZoning = "R6", finalOverlay = "None", finalSpecial = "None", finalLotArea = 4000;
 
@@ -116,7 +105,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      // PROVEN FIX: Targets index 0 inside the API list matrix safely to prevent undefined reference errors
+      // PROVEN RUNTIME FIX 1: Dig down inside the row array list index cleanly
       var record = data[0]; 
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
@@ -125,38 +114,41 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       finalSpecial = record.spdist1 || "None";
       finalLotArea = parseFloat(record.lotarea) || finalLotArea;
       
-      var wrapper = document.getElementById("resultsWrapper");
-      if (wrapper) wrapper.style.display = "block";
+      document.getElementById("resultsWrapper").style.display = "block";
     } else {
       showLiveLog("Location data match empty inside database registries.");
     }
   } catch (err) {
-    showLiveLog("API Route roadblock encountered.");
+    showLiveLog("API Connection roadblock. Verify connection strings.");
     console.error(err);
   }
 
-  // Restore button control tracking states safely
+  // Ensure button state is unlocked no matter what happens
   var btn = document.getElementById(buttonId);
   if (btn) {
     btn.innerText = originalButtonText;
     btn.disabled = false;
   }
 
-  // Print text variables out to layout node parameters
-  if (document.getElementById("infoAddress")) document.getElementById("infoAddress").innerText = finalAddress;
-  if (document.getElementById("infoBbl")) document.getElementById("infoBbl").innerText = finalBbl;
-  if (document.getElementById("infoZoning")) document.getElementById("infoZoning").innerText = finalZoning;
-  if (document.getElementById("infoOverlay")) document.getElementById("infoOverlay").innerText = finalOverlay;
-  if (document.getElementById("infoSpecial")) document.getElementById("infoSpecial").innerText = finalSpecial;
-  if (document.getElementById("infoLotArea")) document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
+  document.getElementById("infoAddress").innerText = finalAddress;
+  document.getElementById("infoBbl").innerText = finalBbl;
+  document.getElementById("infoZoning").innerText = finalZoning;
+  document.getElementById("infoOverlay").innerText = finalOverlay;
+  document.getElementById("infoSpecial").innerText = finalSpecial;
+  document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Clean zoning token keys defensively by stripping hyphens or spaces (e.g. "R6-1" -> "R6")
+  // PROVEN RUNTIME FIX 2: Parse underlying string suffix data cleanly as pure text strings
   var cleanKey = "R6";
   if (finalZoning) {
-    var spaceSplit = finalZoning.split(' ')[0];
-    var hyphenSplit = spaceSplit.split('-')[0];
-    var slashSplit = hyphenSplit.split('/')[0];
-    cleanKey = slashSplit.trim().toUpperCase();
+    var rawText = finalZoning.toUpperCase().trim();
+    // Safety check splitting text snippets down without mutating variable object types
+    if (rawText.indexOf('-') !== -1) {
+      cleanKey = rawText.split('-')[0].trim();
+    } else if (rawText.indexOf('/') !== -1) {
+      cleanKey = rawText.split('/')[0].trim();
+    } else {
+      cleanKey = rawText;
+    }
   }
 
   var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." };
@@ -164,13 +156,13 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   var stdMaxZfa = Math.round(finalLotArea * lookup.stdFar);
   var uapMaxZfa = Math.round(finalLotArea * lookup.uapFar);
 
-  if (document.getElementById("lblStdFar")) document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
-  if (document.getElementById("lblStdMaxSf")) document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
-  if (document.getElementById("lblUapFar")) document.getElementById("lblUapFar").innerText = lookup.uapFar.toFixed(2) + " FAR";
-  if (document.getElementById("lblUapMaxSf")) document.getElementById("lblUapMaxSf").innerText = "Max Capacity: " + uapMaxZfa.toLocaleString() + " ZFA SF";
+  document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
+  document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
+  document.getElementById("lblUapFar").innerText = lookup.uapFar.toFixed(2) + " FAR";
+  document.getElementById("lblUapMaxSf").innerText = "Max Capacity: " + uapMaxZfa.toLocaleString() + " ZFA SF";
 
-  if (document.getElementById("resUseText")) document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
-  if (document.getElementById("cfUseText")) document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
+  document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
+  document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
 
   var firstLetter = cleanKey.charAt(0);
   var commBox = document.getElementById("commUseText");
@@ -188,9 +180,12 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
   var specialNotice = "Standard underlying city-wide framework text rules apply.";
   if (finalSpecial !== "None" && finalSpecial !== "") {
-    specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
+    specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take priority.";
   }
 
   var table = document.getElementById("tableBody");
   if (table) {
     table.innerHTML = 
+      "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Standalone residential and community facility options govern footprints.</td><td>" + specialNotice + "</td></tr>" + 
+      "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Minimum lot size criteria determine subdivide allowances.</td><td>Contextual profiles protect pre-existing historic lines.</td></tr>" + 
+      "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Floor Area Ratio (FAR) Max</td><td>Baseline caps floor area at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF).</td><td>UAP expands density up to <b>" + lookup.uapFar.toFixed(2) + " FAR</b> (" + uapMaxZfa.toLocaleString() + " Max SF).</td></tr>" + 

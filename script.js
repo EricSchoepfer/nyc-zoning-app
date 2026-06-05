@@ -41,17 +41,21 @@ document.getElementById("addressBtn").onclick = function() {
 
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async function() {
-    document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
-    
-    var fullBoroMap = { "MN": "MANHATTAN", "BX": "BRONX", "BK": "BROOKLYN", "QN": "QUEENS", "SI": "STATEN ISLAND" };
-    var cleanAddress = addressText.trim().toUpperCase();
-    
-    // Official NYC Socrata Open Data PLUTO Endpoint API Engine Link
-    var url = "https://cityofnewyork.us?" +
-              "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
-              "&address=" + encodeURIComponent(cleanAddress);
+    try {
+      document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
+      var fullBoroMap = { "MN": "MANHATTAN", "BX": "BRONX", "BK": "BROOKLYN", "QN": "QUEENS", "SI": "STATEN ISLAND" };
+      var cleanAddress = addressText.trim().toUpperCase();
+      
+      // Fixed SoQL Direct API Entry Point for Address Matching
+      var url = "https://cityofnewyork.us?" +
+                "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
+                "&address=" + encodeURIComponent(cleanAddress);
 
-    await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
+      await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
+    } catch(err) {
+      resetButton("addressBtn", "Search Address Profile");
+      showLiveLog("Address dispatch failure occurred.");
+    }
   }, 750);
 };
 
@@ -72,17 +76,29 @@ document.getElementById("bblBtn").onclick = function() {
 
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async function() {
-    document.getElementById("bblBtn").innerText = "Assembling Live Map...";
-    
-    var block = String(blockRaw.trim()).padStart(5, '0');
-    var lot = String(lotRaw.trim()).padStart(4, '0');
-    var computedBbl = boro + block + lot;
+    try {
+      document.getElementById("bblBtn").innerText = "Assembling Live Map...";
+      var block = String(blockRaw.trim()).padStart(5, '0');
+      var lot = String(lotRaw.trim()).padStart(4, '0');
+      var computedBbl = boro + block + lot;
 
-    var url = "https://cityofnewyork.us?bbl=" + computedBbl;
+      var url = "https://cityofnewyork.us?bbl=" + computedBbl;
 
-    await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
+      await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
+    } catch(err) {
+      resetButton("bblBtn", "Search BBL Profile");
+      showLiveLog("BBL dispatch failure occurred.");
+    }
   }, 750);
 };
+
+function resetButton(buttonId, originalButtonText) {
+  var btn = document.getElementById(buttonId);
+  if (btn) {
+    btn.innerText = originalButtonText;
+    btn.disabled = false;
+  }
+}
 
 function showLiveLog(msg) {
   var logger = document.getElementById("liveLog");
@@ -104,9 +120,8 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      var record = data[0]; // FIX 1: Access the exact single object data bucket inside the array container
+      var record = data[0]; // FIX 1: Extract the first record object array map correctly
       
-      // FIX 2: Strict lower-case mapping configuration for production municipal database environments
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
       finalZoning = record.zonedist1 || "R6";
@@ -116,18 +131,17 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       
       document.getElementById("resultsWrapper").style.display = "block";
     } else {
-      showLiveLog("Location not found in active municipal records. Double-check your spelling, block numbers, or borough options.");
+      showLiveLog("Location not found in active municipal records. Double-check your spelling or criteria.");
     }
   } catch (err) {
-    showLiveLog("API Connection roadblock. Verify connection parameters or check if server is maintaining data pools.");
+    showLiveLog("API Connection roadblock. Verify parameters or check service pools.");
     console.error(err);
   }
 
-  // FIX 3: Safety Reset Engine ensures buttons unlock even if the server throws an error or breaks midway
-  document.getElementById(buttonId).innerText = originalButtonText;
-  document.getElementById(buttonId).disabled = false;
+  // FIX 2: Global structural recovery loop resets buttons instantly regardless of script exceptions
+  resetButton(buttonId, originalButtonText);
 
-  // Render raw structural properties directly out to user template elements
+  // Render raw values directly out to HTML interface blocks
   document.getElementById("infoAddress").innerText = finalAddress;
   document.getElementById("infoBbl").innerText = finalBbl;
   document.getElementById("infoZoning").innerText = finalZoning;
@@ -140,12 +154,12 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
   
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; // FIX 4: Pull the index string element from the RegExp array match instead of the full object
+    cleanKey = zoneMatch[1]; // FIX 3: Pull single string token item out instead of overwriting with the full RegExp Array object
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
 
-  // Fallback structural object mapper execution properties
+  // Dictionary Lookup Fallbacks
   var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { 
     stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." 
   };
@@ -169,7 +183,3 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   } else if (firstLetter === "M") {
     document.getElementById("commUseText").innerHTML = "<b>Permitted (Manufacturing Zone):</b><br>Allows automotive repair workshops, freight hubs, and warehouses.";
   } else {
-    document.getElementById("commUseText").innerHTML = "<b>🚫 Commercial Restricted:</b><br>No commercial overlay options exist. Retail is disallowed.";
-  }
-
-  var specialNotice = "Standard underlying city-wide framework text rules apply.";

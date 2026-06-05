@@ -13,11 +13,13 @@
       <p class="subtitle">Index Filtered Search Engine: Real-Time Address & Tax Lot Calculator</p>
     </header>
 
+    <!-- 1. Input Panel Section -->
     <div class="card">
       <h2>1. Select Property Query Path (Address or BBL)</h2>
       <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
       
       <div class="search-grid">
+        <!-- Track A: Index-Filtered Address Input Panel -->
         <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
           <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
           <div style="margin-top: 10px; display: flex; gap: 8px;">
@@ -33,6 +35,7 @@
           <button type="button" id="addressBtn">Search Address Profile</button>
         </div>
 
+        <!-- Track B: BBL Input Panel -->
         <div>
           <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
           <div class="bbl-box">
@@ -54,6 +57,7 @@
       <div id="liveLog"></div>
     </div>
 
+    <!-- 2. Display Layout Sheets Workspace -->
     <div id="resultsWrapper" style="display: none;">
       <div class="card">
         <h2>2. Active ZoLa Site Parameters</h2>
@@ -85,7 +89,7 @@
       </div>
 
       <div class="card">
-        <h2>4. Complete Use Group Allowance & Mapped Elements Matrix</h2>
+        <h2>4. Complete Use Group Allowance Matrix</h2>
         <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
           <div class="info-item" style="background: white; border-color: #1e3a8a;"><strong style="color: #1e3a8a;">🏠 Allowed Residential Uses</strong><div id="resUseText" style="margin-top: 6px; color: #374151;">-</div></div>
           <div class="info-item" style="background: white; border-color: #0d9488;"><strong style="color: #0d9488;">🏥 Allowed Community Facility Uses</strong><div id="cfUseText" style="margin-top: 6px; color: #374151;">-</div></div>
@@ -105,6 +109,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=5.0"></script>
+  <!-- Appended unique version parameter tag string breaks GitHub's historical caching loop securely -->
+  <script src="script.js?v=6.0"></script>
 </body>
 </html>

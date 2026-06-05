@@ -1,4 +1,4 @@
-// Universal NYC Suffix-Proof Zoning Code Reference Table
+```javascript
 const zoningDictionary = {
     "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
     "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
@@ -26,7 +26,6 @@ document.getElementById("addressBtn").onclick = async function() {
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     var upperAddress = addressText.trim().toUpperCase();
     
-    // UPDATED PROXY: Routes Socrata queries natively via AllOrigins to satisfy CORS restrictions
     var targetUrl = "https://cityofnewyork.us" + encodeURIComponent(upperAddress) + "%25%27&$limit=1";
     var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
     
@@ -46,7 +45,6 @@ document.getElementById("bblBtn").onclick = async function() {
     var lot = String(lotRaw.trim()).padStart(4, '0');
     var computedBbl = boro + block + lot;
     
-    // UPDATED PROXY: Routes Socrata queries natively via AllOrigins to satisfy CORS restrictions
     var targetUrl = "https://cityofnewyork.us" + computedBbl;
     var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
     
@@ -68,19 +66,25 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         var res = await fetch(queryUrl);
         var data = await res.json();
         
-        if (data && data.length > 0) {
-            var record = data[0]; 
-            finalAddress = record.address || fallbackLabel;
-            finalBbl = record.bbl || "N/A";
-            finalZoning = record.zonedist1 || "R6";
-            finalOverlay = record.overlay1 || "None";
-            finalSpecial = record.spdist1 || "None";
-            finalLotArea = parseFloat(record.lotarea) || finalLotArea;
-        } else { 
-            showLiveLog("Location not found in active municipal records. Confirm your spelling or numbers."); 
+        // FIXED PROXY UNBOXING ENGINE: Safely unwraps the text string from the proxy frame
+        if (data && data.contents) {
+            var cleanJson = JSON.parse(data.contents);
+            if (cleanJson && cleanJson.length > 0) {
+                var record = cleanJson[0]; 
+                finalAddress = record.address || fallbackLabel;
+                finalBbl = record.bbl || "N/A";
+                finalZoning = record.zonedist1 || "R6";
+                finalOverlay = record.overlay1 || "None";
+                finalSpecial = record.spdist1 || "None";
+                finalLotArea = parseFloat(record.lotarea) || finalLotArea;
+            } else {
+                showLiveLog("Location not indexed. Verify exact spelling and suffixes.");
+                resetButton(buttonId, originalButtonText);
+                return;
+            }
         }
     } catch (err) { 
-        showLiveLog("CORS Proxy configuration needed. Activating local layout sandbox tracker channels."); 
+        showLiveLog("API Connection roadblock. Reverting to local tracks."); 
     }
 
     // Print values to screen fields
@@ -94,7 +98,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     // Clean sub-suffixes safely (e.g. "R7-1" -> "R7")
     var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-    if (zoneMatch && zoneMatch) {
+    if (zoneMatch && zoneMatch[1]) {
         cleanKey = zoneMatch[1];
     } else {
         cleanKey = cleanKey.substring(0, 2);
@@ -135,5 +139,8 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
 
     document.getElementById("resultsWrapper").style.display = "block";
-    document.getElementById(buttonId).innerText = originalButtonText;
+    resetButton(buttonId, originalButtonText);
 }
+
+function resetButton(buttonId, originalButtonText) {
+var btn = document.getElementById(buttonId);if (btn) btn.innerText = originalButtonText;}

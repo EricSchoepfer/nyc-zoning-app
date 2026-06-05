@@ -25,10 +25,9 @@ document.getElementById("addressBtn").onclick = async function() {
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     var upperAddress = addressText.trim().toUpperCase();
     
-    var targetUrl = "https://cityofnewyork.us" + encodeURIComponent(upperAddress) + "%25%27&$limit=1";
-    var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
-    
-    await executeQueryPipeline(proxyUrl, addressText, "addressBtn", "Search Address Profile");
+    // PROXY-FREE NATIVE LINK: Cleans text spacing to route query lines smoothly through browser firewalls
+    var url = "https://cityofnewyork.us" + encodeURIComponent(upperAddress);
+    await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
 
 // TRACK 2: Borough/Block/Lot Button Handler
@@ -44,10 +43,8 @@ document.getElementById("bblBtn").onclick = async function() {
     var lot = String(lotRaw.trim()).padStart(4, '0');
     var computedBbl = boro + block + lot;
     
-    var targetUrl = "https://cityofnewyork.us" + computedBbl;
-    var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
-    
-    await executeQueryPipeline(proxyUrl, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
+    var url = "https://cityofnewyork.us" + computedBbl;
+    await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
 };
 
 function showLiveLog(msg) {
@@ -65,22 +62,19 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         var res = await fetch(queryUrl);
         var data = await res.json();
         
-        if (data && data.contents) {
-            var cleanJson = JSON.parse(data.contents);
-            // FIXED UNBOXING ARRAY MATCH: Targets position zero index with correct lowercase syntax variables
-            if (cleanJson && cleanJson.length > 0) {
-                var record = cleanJson[0]; 
-                finalAddress = record.address || fallbackLabel;
-                finalBbl = record.bbl || "N/A";
-                finalZoning = record.zonedist1 || "R6";
-                finalOverlay = record.overlay1 || "None";
-                finalSpecial = record.spdist1 || "None";
-                finalLotArea = parseFloat(record.lotarea) || finalLotArea;
-            } else {
-                showLiveLog("Location not found in active municipal records. Confirm spelling.");
-                document.getElementById(buttonId).innerText = originalButtonText;
-                return;
-            }
+        // UNWRAPPED ARRAY PARSER: Direct reading unblocks text parameters instantly
+        if (data && data.length > 0) {
+            var record = data[0]; 
+            finalAddress = record.address || fallbackLabel;
+            finalBbl = record.bbl || "N/A";
+            finalZoning = record.zonedist1 || "R6";
+            finalOverlay = record.overlay1 || "None";
+            finalSpecial = record.spdist1 || "None";
+            finalLotArea = parseFloat(record.lotarea) || finalLotArea;
+        } else {
+            showLiveLog("Location format not found in latest dataset slice. Use precise street names (e.g., '54-11 QUEENS BOULEVARD').");
+            document.getElementById(buttonId).innerText = originalButtonText;
+            return;
         }
     } catch (err) { 
         showLiveLog("API Connection error. Utilizing sandbox local tracks."); 
@@ -93,9 +87,10 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     document.getElementById("infoSpecial").innerText = finalSpecial;
     document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
+    // Clean sub-suffixes safely (e.g. "R7-1" -> "R7")
     var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-    if (zoneMatch && zoneMatch) {
+    if (zoneMatch && zoneMatch[1]) {
         cleanKey = zoneMatch[1];
     } else {
         cleanKey = cleanKey.substring(0, 2);

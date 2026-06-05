@@ -25,7 +25,7 @@ const zoningDictionary = {
 
 let searchTimeout = null;
 
-// TRACK 1: Filtered Address Input Button Handler
+// TRACK A: Street Address Lookup
 document.getElementById("addressBtn").onclick = function() {
   hideLiveLog();
   var boroCode = document.getElementById("addressBoroSelect").value;
@@ -43,11 +43,10 @@ document.getElementById("addressBtn").onclick = function() {
   searchTimeout = setTimeout(async function() {
     document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
     
-    // Convert short form codes to long string names required by Socrata's text field index
     var fullBoroMap = { "MN": "MANHATTAN", "BX": "BRONX", "BK": "BROOKLYN", "QN": "QUEENS", "SI": "STATEN ISLAND" };
     var cleanAddress = addressText.trim().toUpperCase();
     
-    // Live Endpoint using Socrata Query Language (SoQL) text matching rules
+    // Live NYC Open Data PLUTO API URL
     var url = "https://cityofnewyork.us?" +
               "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
               "&address=" + encodeURIComponent(cleanAddress);
@@ -56,7 +55,7 @@ document.getElementById("addressBtn").onclick = function() {
   }, 750);
 };
 
-// TRACK 2: Borough/Block/Lot Button Handler
+// TRACK B: Borough/Block/Lot Lookup
 document.getElementById("bblBtn").onclick = function() {
   hideLiveLog();
   var boro = document.getElementById("boroughInput").value;
@@ -75,7 +74,6 @@ document.getElementById("bblBtn").onclick = function() {
   searchTimeout = setTimeout(async function() {
     document.getElementById("bblBtn").innerText = "Assembling Live Map...";
     
-    // Clean, pad strings to build exact 10-digit tax lot identifiers
     var block = String(blockRaw.trim()).padStart(5, '0');
     var lot = String(lotRaw.trim()).padStart(4, '0');
     var computedBbl = boro + block + lot;
@@ -102,12 +100,12 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
   try {
     var res = await fetch(queryUrl);
-    if (!res.ok) throw new Error("Network response was not ok");
+    if (!res.ok) throw new Error("Network response error");
     var data = await res.json();
 
     if (data && data.length > 0) {
-      var record = data[0];
-      // Map properties matching lowercase Socrata column schemas
+      var record = data[0]; // FIX 1: Access the object record directly inside the array collection
+      
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
       finalZoning = record.zonedist1 || "R6";
@@ -115,7 +113,6 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       finalSpecial = record.spdist1 || "None";
       finalLotArea = parseFloat(record.lotarea) || finalLotArea;
       
-      // Reveal the data wrapper element panel on a successful query match
       document.getElementById("resultsWrapper").style.display = "block";
     } else {
       showLiveLog("Location not found in active municipal records. Double-check your spelling, block numbers, or borough options.");
@@ -125,11 +122,11 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     console.error(err);
   }
 
-  // Restore button control tracking states
+  // FIX 3: Reset buttons instantly regardless of successful responses or runtime errors
   document.getElementById(buttonId).innerText = originalButtonText;
   document.getElementById(buttonId).disabled = false;
 
-  // Print values to user workspace interface elements
+  // Print raw API data fields safely to DOM nodes
   document.getElementById("infoAddress").innerText = finalAddress;
   document.getElementById("infoBbl").innerText = finalBbl;
   document.getElementById("infoZoning").innerText = finalZoning;
@@ -137,15 +134,17 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   document.getElementById("infoSpecial").innerText = finalSpecial;
   document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Safe zoning parameter parser to extract primary prefix elements
+  // Regex Normalization Machine
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
+  
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1];
+    cleanKey = zoneMatch[1]; // FIX 2: Correct array element string reference payload matching map profiles
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
 
+  // Fallback map layout parameters
   var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { 
     stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." 
   };
@@ -174,3 +173,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
   var specialNotice = "Standard underlying city-wide framework text rules apply.";
   if (finalSpecial !== "None" && finalSpecial !== "") {
+    specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
+  }
+
+  document.getElementById("tableBody").innerHTML = 

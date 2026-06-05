@@ -17,67 +17,75 @@ const zoningDictionary = {
   "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
 };
 
-// TRACK 1: Filtered Address Input Button Handler
-document.getElementById("addressBtn").onclick = async function() {
-  hideLiveLog();
-  var boroCode = document.getElementById("addressBoroSelect").value;
-  var addressText = document.getElementById("addressInput").value;
+// FIX: Wait for the DOM to completely finish building before touching buttons
+document.addEventListener("DOMContentLoaded", function() {
+  
+  var addressBtn = document.getElementById("addressBtn");
+  if (addressBtn) {
+    addressBtn.onclick = async function() {
+      hideLiveLog();
+      var boroCode = document.getElementById("addressBoroSelect").value;
+      var addressText = document.getElementById("addressInput").value;
 
-  if (!addressText || addressText.trim() === "") {
-    alert("Please enter an address.");
-    return;
+      if (!addressText || addressText.trim() === "") {
+        alert("Please enter an address.");
+        return;
+      }
+
+      addressBtn.innerText = "Querying Master PLUTO...";
+      addressBtn.disabled = true;
+
+      var fullBoroMap = { "BK": "BROOKLYN", "MN": "MANHATTAN", "QN": "QUEENS", "BX": "BRONX", "SI": "STATEN ISLAND" };
+      var cleanAddress = addressText.trim().toUpperCase().replace(/\./g, "");
+      cleanAddress = cleanAddress.replace(/ AVENUE$/, " AVE").replace(/ STREET$/, " ST").replace(/ ROAD$/, " RD").replace(/ BOULEVARD$/, " BLVD");
+
+      var url = "https://cityofnewyork.us?" +
+                "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
+                "&$where=address LIKE '" + encodeURIComponent(cleanAddress) + "%'";
+
+      await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
+    };
   }
 
-  document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
-  document.getElementById("addressBtn").disabled = true;
+  var bblBtn = document.getElementById("bblBtn");
+  if (bblBtn) {
+    bblBtn.onclick = async function() {
+      hideLiveLog();
+      var boro = document.getElementById("boroughInput").value;
+      var blockRaw = document.getElementById("blockInput").value;
+      var lotRaw = document.getElementById("lotInput").value;
 
-  var fullBoroMap = { "BK": "BROOKLYN", "MN": "MANHATTAN", "QN": "QUEENS", "BX": "BRONX", "SI": "STATEN ISLAND" };
-  var cleanAddress = addressText.trim().toUpperCase().replace(/\./g, "");
-  
-  // Standard format normalization helper (e.g. AVENUE -> AVE)
-  cleanAddress = cleanAddress.replace(/ AVENUE$/, " AVE").replace(/ STREET$/, " ST").replace(/ ROAD$/, " RD").replace(/ BOULEVARD$/, " BLVD");
+      if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
+        alert("Fill out BBL fields.");
+        return;
+      }
 
-  // SoQL $where text matching layout prevents silent array drop mutations
-  var url = "https://cityofnewyork.us?" +
-            "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
-            "&$where=address LIKE '" + encodeURIComponent(cleanAddress) + "%'";
+      bblBtn.innerText = "Assembling Live Map...";
+      bblBtn.disabled = true;
 
-  await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
-};
+      var block = String(blockRaw.trim()).padStart(5, '0');
+      var lot = String(lotRaw.trim()).padStart(4, '0');
+      
+      var rawBbl = boro + block + lot;
+      var url = "https://cityofnewyork.us?" +
+                "&$where=bbl=" + rawBbl + " OR bbl='" + rawBbl + "'";
 
-// TRACK 2: Borough/Block/Lot Button Handler
-document.getElementById("bblBtn").onclick = async function() {
-  hideLiveLog();
-  var boro = document.getElementById("boroughInput").value;
-  var blockRaw = document.getElementById("blockInput").value;
-  var lotRaw = document.getElementById("lotInput").value;
-
-  if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
-    alert("Fill out BBL fields.");
-    return;
+      await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
+    };
   }
-
-  document.getElementById("bblBtn").innerText = "Assembling Live Map...";
-  document.getElementById("bblBtn").disabled = true;
-
-  var block = String(blockRaw.trim()).padStart(5, '0');
-  var lot = String(lotRaw.trim()).padStart(4, '0');
-  
-  var rawBbl = boro + block + lot;
-  var url = "https://cityofnewyork.us?" +
-            "&$where=bbl=" + rawBbl + " OR bbl='" + rawBbl + "'";
-
-  await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
-};
+});
 
 function showLiveLog(msg) {
   var logger = document.getElementById("liveLog");
-  logger.innerText = "System Notice: " + msg;
-  logger.style.display = "block";
+  if (logger) {
+    logger.innerText = "System Notice: " + msg;
+    logger.style.display = "block";
+  }
 }
 
 function hideLiveLog() {
-  document.getElementById("liveLog").style.display = "none";
+  var logger = document.getElementById("liveLog");
+  if (logger) logger.style.display = "none";
 }
 
 // LIVE PIPELINE COMPILER ENGINE
@@ -97,32 +105,36 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       finalSpecial = record.spdist1 || "None";
       finalLotArea = parseFloat(record.lotarea) || finalLotArea;
       
-      document.getElementById("resultsWrapper").style.display = "block";
+      var wrapper = document.getElementById("resultsWrapper");
+      if (wrapper) wrapper.style.display = "block";
     } else {
-      showLiveLog("Location not found in active records. Try variant abbreviations.");
+      showLiveLog("Location not found in active records. Check matching criteria values.");
     }
   } catch (err) {
-    showLiveLog("API Connection roadblock. Reverting to local tracks.");
+    showLiveLog("API Connection roadblock. Verify connection strings.");
     console.error(err);
   }
 
-  // GLOBAL SAFETY RESTORE: Unlocks buttons immediately to prevent click-freezing
-  document.getElementById(buttonId).innerText = originalButtonText;
-  document.getElementById(buttonId).disabled = false;
+  // Always restore button states cleanly
+  var btn = document.getElementById(buttonId);
+  if (btn) {
+    btn.innerText = originalButtonText;
+    btn.disabled = false;
+  }
 
-  // Print values to user interface cards
-  document.getElementById("infoAddress").innerText = finalAddress;
-  document.getElementById("infoBbl").innerText = finalBbl;
-  document.getElementById("infoZoning").innerText = finalZoning;
-  document.getElementById("infoOverlay").innerText = finalOverlay;
-  document.getElementById("infoSpecial").innerText = finalSpecial;
-  document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
+  // Print values safely to page elements
+  if (document.getElementById("infoAddress")) document.getElementById("infoAddress").innerText = finalAddress;
+  if (document.getElementById("infoBbl")) document.getElementById("infoBbl").innerText = finalBbl;
+  if (document.getElementById("infoZoning")) document.getElementById("infoZoning").innerText = finalZoning;
+  if (document.getElementById("infoOverlay")) document.getElementById("infoOverlay").innerText = finalOverlay;
+  if (document.getElementById("infoSpecial")) document.getElementById("infoSpecial").innerText = finalSpecial;
+  if (document.getElementById("infoLotArea")) document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Suffix strip parser string sanitization machine
+  // Clean zoning tokens securely without string drop crashes
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; // FIX: Extract string element from match index array securely
+    cleanKey = zoneMatch[1]; 
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
@@ -132,23 +144,26 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   var stdMaxZfa = Math.round(finalLotArea * lookup.stdFar);
   var uapMaxZfa = Math.round(finalLotArea * lookup.uapFar);
 
-  document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
-  document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
-  document.getElementById("lblUapFar").innerText = lookup.uapFar.toFixed(2) + " FAR";
-  document.getElementById("lblUapMaxSf").innerText = "Max Capacity: " + uapMaxZfa.toLocaleString() + " ZFA SF";
+  if (document.getElementById("lblStdFar")) document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
+  if (document.getElementById("lblStdMaxSf")) document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
+  if (document.getElementById("lblUapFar")) document.getElementById("lblUapFar").innerText = lookup.uapFar.toFixed(2) + " FAR";
+  if (document.getElementById("lblUapMaxSf")) document.getElementById("lblUapMaxSf").innerText = "Max Capacity: " + uapMaxZfa.toLocaleString() + " ZFA SF";
 
-  document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
-  document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
+  if (document.getElementById("resUseText")) document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
+  if (document.getElementById("cfUseText")) document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
 
   var firstLetter = cleanKey.charAt(0);
-  if (finalOverlay !== "None" && finalOverlay !== "") {
-    document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + finalOverlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
-  } else if (firstLetter === "C") {
-    document.getElementById("commUseText").innerHTML = "<b>Permitted (Commercial Zone):</b><br>Broad commercial retail operations allowed.";
-  } else if (firstLetter === "M") {
-    document.getElementById("commUseText").innerHTML = "<b>Permitted (Manufacturing Zone):</b><br>Allows workshops and warehouses.";
-  } else {
-    document.getElementById("commUseText").innerHTML = "<b>🚫 Commercial Restricted:</b><br>No commercial overlay options exist.";
+  var commBox = document.getElementById("commUseText");
+  if (commBox) {
+    if (finalOverlay !== "None" && finalOverlay !== "") {
+      commBox.innerHTML = "<b>Permitted via Overlay (" + finalOverlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
+    } else if (firstLetter === "C") {
+      commBox.innerHTML = "<b>Permitted (Commercial Zone):</b><br>Broad commercial retail operations allowed.";
+    } else if (firstLetter === "M") {
+      commBox.innerHTML = "<b>Permitted (Manufacturing Zone):</b><br>Allows workshops and warehouses.";
+    } else {
+      commBox.innerHTML = "<b>🚫 Commercial Restricted:</b><br>No commercial overlay options exist.";
+    }
   }
 
   var specialNotice = "Standard underlying city-wide framework text rules apply.";
@@ -156,11 +171,8 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
   }
 
-  document.getElementById("tableBody").innerHTML = 
-    "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Standalone residential and community facility options govern footprints.</td><td>" + specialNotice + "</td></tr>" + 
-    "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Minimum lot size criteria determine subdivide allowances.</td><td>Contextual profiles protect pre-existing historic lines.</td></tr>" + 
-    "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Floor Area Ratio (FAR) Max</td><td>Baseline caps floor area at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF).</td><td>UAP expands density up to <b>" + lookup.uapFar.toFixed(2) + " FAR</b> (" + uapMaxZfa.toLocaleString() + " Max SF).</td></tr>" + 
-    "<tr><td><b>ZR 23-431 / 34-111</b></td><td>Yard & Setback Regulations</td><td>Rear open space yards scale back building lines from lot perimeters.</td><td>Zero-lot-line commercial footprints drop yard constraints fully.</td></tr>" + 
-    "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
-}
- 
+  var table = document.getElementById("tableBody");
+  if (table) {
+    table.innerHTML = 
+      "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Standalone residential and community facility options govern footprints.</td><td>" + specialNotice + "</td></tr>" + 
+      "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Minimum lot size criteria determine subdivide allowances.</td><td>Contextual profiles protect pre-existing historic lines.</td></tr>" + 

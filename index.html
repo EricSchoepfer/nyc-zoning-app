@@ -73,12 +73,13 @@
                     <input type="text" id="lotInput" placeholder="Enter Lot (e.g. 44)" value="44">
                 </div>
                 <div style="display: flex; align-items: flex-end;">
-                    <button type="button" class="action-btn" onclick="runZoningAnalysisDashboard();">Run BBL Query</button>
+                    <!-- SOLID EMBED: Standard button ID hook connected globally inside the script layout below -->
+                    <button type="button" class="action-btn" id="searchBtn">Run BBL Query</button>
                 </div>
             </div>
         </div>
 
-        <!-- Workspace Elements -->
+        <!-- Workspace Elements (Hidden by default) -->
         <div id="resultsWrapper" style="display: none;">
             
             <!-- Result Parameters Dashboard -->

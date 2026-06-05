@@ -28,11 +28,9 @@ document.getElementById("addressBtn").onclick = async function() {
     return;
   }
 
-  // INSTANT PROTECTION: Lock button immediately to prevent double clicking/timeouts
   document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
   document.getElementById("addressBtn").disabled = true;
 
-  // Exact matching strategy mapping to Socrata Open Data columns
   var fullBoroMap = { "BK": "BROOKLYN", "MN": "MANHATTAN", "QN": "QUEENS", "BX": "BRONX", "SI": "STATEN ISLAND" };
   var url = "https://cityofnewyork.us" + 
             encodeURIComponent(fullBoroMap[boroCode]) + 
@@ -53,7 +51,6 @@ document.getElementById("bblBtn").onclick = async function() {
     return;
   }
 
-  // INSTANT PROTECTION: Lock button immediately
   document.getElementById("bblBtn").innerText = "Assembling Live Map...";
   document.getElementById("bblBtn").disabled = true;
 
@@ -70,6 +67,10 @@ function showLiveLog(msg) {
   logger.style.display = "block";
 }
 
+function hideLiveLog() {
+  document.getElementById("liveLog").style.display = "none";
+}
+
 // LIVE PIPELINE COMPILER ENGINE
 async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText) {
   var finalAddress = fallbackLabel, finalBbl = "N/A", finalZoning = "R6", finalOverlay = "None", finalSpecial = "None", finalLotArea = 4000;
@@ -79,7 +80,8 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      var record = data[0]; // Access the matched row object directly
+      // FIX: Read properties strictly out of the first array element [0] returned by Socrata
+      var record = data[0]; 
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
       finalZoning = record.zonedist1 || "R6";
@@ -96,7 +98,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     console.error(err);
   }
 
-  // ALWAYS RELEASE BUTTON FROM LOCK STATE HERE
+  // Restore button control states
   document.getElementById(buttonId).innerText = originalButtonText;
   document.getElementById(buttonId).disabled = false;
 
@@ -112,7 +114,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
   if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1];
+    cleanKey = zoneMatch[1]; // FIX: Extract the matched text string value index token accurately
   } else {
     cleanKey = cleanKey.substring(0, 2);
   }
@@ -152,8 +154,4 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Floor Area Ratio (FAR) Max</td><td>Baseline caps floor area at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF).</td><td>UAP expands density up to <b>" + lookup.uapFar.toFixed(2) + " FAR</b> (" + uapMaxZfa.toLocaleString() + " Max SF).</td></tr>" + 
     "<tr><td><b>ZR 23-431 / 34-111</b></td><td>Yard & Setback Regulations</td><td>Rear open space yards scale back building lines from lot perimeters.</td><td>Zero-lot-line commercial footprints drop yard constraints fully.</td></tr>" + 
     "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
-}
-
-function hideLiveLog() {
-  document.getElementById("liveLog").style.display = "none";
 }

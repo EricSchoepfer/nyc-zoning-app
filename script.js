@@ -17,9 +17,10 @@ const zoningDictionary = {
   "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
 };
 
-// FIX: Wait for the DOM to completely finish building before touching buttons
-document.addEventListener("DOMContentLoaded", function() {
-  
+// Global Initialization Wrapper
+function initTracker() {
+  console.log("Zoning Tracker Initialized Successfully.");
+
   var addressBtn = document.getElementById("addressBtn");
   if (addressBtn) {
     addressBtn.onclick = async function() {
@@ -73,7 +74,14 @@ document.addEventListener("DOMContentLoaded", function() {
       await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
     };
   }
-});
+}
+
+// Ensure execution happens no matter how browser indexes files
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initTracker);
+} else {
+  initTracker();
+}
 
 function showLiveLog(msg) {
   var logger = document.getElementById("liveLog");
@@ -97,7 +105,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      var record = data[0]; 
+      var record = data[0]; // Fix: Explicitly drill into array element zero
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
       finalZoning = record.zonedist1 || "R6";
@@ -111,18 +119,18 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
       showLiveLog("Location not found in active records. Check matching criteria values.");
     }
   } catch (err) {
-    showLiveLog("API Connection roadblock. Verify connection strings.");
+    showLiveLog("API Connection roadblock. Verify network connection strings.");
     console.error(err);
   }
 
-  // Always restore button states cleanly
+  // Absolute Recovery Unlock Mechanism
   var btn = document.getElementById(buttonId);
   if (btn) {
     btn.innerText = originalButtonText;
     btn.disabled = false;
   }
 
-  // Print values safely to page elements
+  // Print raw attributes
   if (document.getElementById("infoAddress")) document.getElementById("infoAddress").innerText = finalAddress;
   if (document.getElementById("infoBbl")) document.getElementById("infoBbl").innerText = finalBbl;
   if (document.getElementById("infoZoning")) document.getElementById("infoZoning").innerText = finalZoning;
@@ -130,13 +138,16 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   if (document.getElementById("infoSpecial")) document.getElementById("infoSpecial").innerText = finalSpecial;
   if (document.getElementById("infoLotArea")) document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Clean zoning tokens securely without string drop crashes
-  var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-  if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; 
-  } else {
-    cleanKey = cleanKey.substring(0, 2);
+  // Clean zoning token keys defensively without crashing via arrays
+  var cleanKey = "R6";
+  if (finalZoning) {
+    var parsed = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    var matches = parsed.match(/^([A-Z]+[0-9]+)/);
+    if (matches && matches[1]) {
+      cleanKey = matches[1];
+    } else {
+      cleanKey = parsed.substring(0, 2);
+    }
   }
 
   var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing.", cfUses: "Community facility open." };
@@ -175,4 +186,3 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   if (table) {
     table.innerHTML = 
       "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Standalone residential and community facility options govern footprints.</td><td>" + specialNotice + "</td></tr>" + 
-      "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Minimum lot size criteria determine subdivide allowances.</td><td>Contextual profiles protect pre-existing historic lines.</td></tr>" + 

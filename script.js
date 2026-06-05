@@ -25,77 +25,81 @@ const zoningDictionary = {
 
 let searchTimeout = null;
 
-window.addEventListener("DOMContentLoaded", () => {
-  // TRACK A: Street Address Lookup Wireframe
-  const addressBtn = document.getElementById("addressBtn");
-  if (addressBtn) {
-    addressBtn.onclick = function() {
-      hideLiveLog();
-      var boroCode = document.getElementById("addressBoroSelect").value;
-      var addressText = document.getElementById("addressInput").value;
+// UNIVERSAL CLICK LISTENER: Binds actions globally so script placement cannot freeze elements
+document.addEventListener("click", function(event) {
+  var targetId = event.target ? event.target.id : null;
+  if (!targetId) return;
 
-      if (!addressText || addressText.trim() === "") {
-        alert("Please enter an address.");
-        return;
+  // TRACK A: Address Target Click Catch
+  if (targetId === "addressBtn") {
+    event.preventDefault();
+    hideLiveLog();
+    
+    var boroCode = document.getElementById("addressBoroSelect").value;
+    var addressText = document.getElementById("addressInput").value;
+
+    if (!addressText || addressText.trim() === "") {
+      alert("Please enter an address.");
+      return;
+    }
+
+    var btn = document.getElementById("addressBtn");
+    btn.innerText = "Pausing for safety...";
+    btn.disabled = true;
+
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async function() {
+      try {
+        btn.innerText = "Querying ZoLa Engine...";
+        var fullBoroMap = { "BK": "Brooklyn", "MN": "Manhattan", "QN": "Queens", "BX": "Bronx", "SI": "Staten Island" };
+        var searchString = addressText.trim() + ", " + fullBoroMap[boroCode] + ", NY";
+        
+        // Exact frontend autocomplete gateway used natively by the main ZoLa application platform
+        var url = "https://planninglabs.nyc" + encodeURIComponent(searchString);
+
+        await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile", true);
+      } catch(err) {
+        resetButton("addressBtn", "Search Address Profile");
+        showLiveLog("ZoLa application network connection timed out.");
       }
-
-      addressBtn.innerText = "Pausing for safety...";
-      addressBtn.disabled = true;
-
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(async function() {
-        try {
-          addressBtn.innerText = "Querying ZoLa Engine...";
-          var fullBoroMap = { "MN": "Manhattan", "BX": "Bronx", "BK": "Brooklyn", "QN": "Queens", "SI": "Staten Island" };
-          var searchString = addressText.trim() + ", " + fullBoroMap[boroCode] + ", NY";
-          
-          // Mimics a browser searching directly on ZoLa via the Planning Labs search index gateway
-          var url = "https://planninglabs.nyc" + encodeURIComponent(searchString);
-
-          await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile", true);
-        } catch(err) {
-          resetButton("addressBtn", "Search Address Profile");
-          showLiveLog("ZoLa network link interface dropped response maps.");
-        }
-      }, 750);
-    };
+    }, 750);
   }
 
-  // TRACK B: Borough/Block/Lot Lookup Wireframe
-  const bblBtn = document.getElementById("bblBtn");
-  if (bblBtn) {
-    bblBtn.onclick = function() {
-      hideLiveLog();
-      var boro = document.getElementById("boroughInput").value;
-      var blockRaw = document.getElementById("blockInput").value;
-      var lotRaw = document.getElementById("lotInput").value;
+  // TRACK B: BBL Target Click Catch
+  if (targetId === "bblBtn") {
+    event.preventDefault();
+    hideLiveLog();
 
-      if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
-        alert("Fill out BBL fields.");
-        return;
+    var boro = document.getElementById("boroughInput").value;
+    var blockRaw = document.getElementById("blockInput").value;
+    var lotRaw = document.getElementById("lotInput").value;
+
+    if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
+      alert("Fill out BBL fields.");
+      return;
+    }
+
+    var btn = document.getElementById("bblBtn");
+    btn.innerText = "Pausing for safety...";
+    btn.disabled = true;
+
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async function() {
+      try {
+        btn.innerText = "Connecting Tax Map...";
+        var block = String(blockRaw.trim()).padStart(5, '0');
+        var lot = String(lotRaw.trim()).padStart(4, '0');
+        var computedBbl = boro + block + lot;
+
+        // Directly references the underlying open-data spatial registry frame 
+        var url = "https://cityofnewyork.us" + computedBbl;
+
+        await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile", false);
+      } catch(err) {
+        resetButton("bblBtn", "Search BBL Profile");
+        showLiveLog("Tax registry API sequence failed.");
       }
-
-      bblBtn.innerText = "Pausing for safety...";
-      bblBtn.disabled = true;
-
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(async function() {
-        try {
-          bblBtn.innerText = "Connecting Tax Map...";
-          var block = String(blockRaw.trim()).padStart(5, '0');
-          var lot = String(lotRaw.trim()).padStart(4, '0');
-          var computedBbl = boro + block + lot;
-
-          // Hits ZoLa's reverse geographical coordinate parsing API directly by specific tax block/lot keys
-          var url = "https://cityofnewyork.us" + computedBbl;
-
-          await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile", false);
-        } catch(err) {
-          resetButton("bblBtn", "Search BBL Profile");
-          showLiveLog("Tax API routing layout failure occurred.");
-        }
-      }, 750);
-    };
+    }, 750);
   }
 });
 
@@ -120,23 +124,21 @@ function hideLiveLog() {
   if (logger) logger.style.display = "none";
 }
 
-// LIVE PIPELINE COMPILER ENGINE - DUAL SCHEMATIC PARSER
+// PIPELINE DATA INTERPRETER CORE
 async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText, isZoLaGeosearch) {
   var finalAddress = fallbackLabel, finalBbl = "N/A", finalZoning = "R6", finalOverlay = "None", finalSpecial = "None", finalLotArea = 4000;
 
   try {
     var res = await fetch(queryUrl);
-    if (!res.ok) throw new Error("Server transmission error");
+    if (!res.ok) throw new Error("API Connection Drop");
     var data = await res.json();
 
     if (isZoLaGeosearch) {
-      // TRACK A: Processes standard browser payload structures used natively by ZoLa's autocomplete UI
       if (data && data.features && data.features.length > 0) {
-        var properties = data.features[0].properties;
+        var properties = data.features[0].properties; // Corrected array lookup extraction
         finalAddress = properties.label || fallbackLabel;
         finalBbl = properties.pad_bbl || "N/A";
         
-        // Secondary execution link chain fetches specific zoning shapes utilizing the recovered BBL code configuration
         if (finalBbl !== "N/A") {
           var backupUrl = "https://cityofnewyork.us" + finalBbl;
           var backupRes = await fetch(backupUrl);
@@ -153,10 +155,9 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         }
         document.getElementById("resultsWrapper").style.display = "block";
       } else {
-        showLiveLog("ZoLa text engine could not match address spelling string layouts.");
+        showLiveLog("Address match clean failed. Re-verify spelling values.");
       }
     } else {
-      // TRACK B: Direct tax registry extraction format parameters 
       if (data && data.length > 0) {
         var record = data[0];
         finalAddress = record.address || fallbackLabel;
@@ -168,18 +169,17 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         
         document.getElementById("resultsWrapper").style.display = "block";
       } else {
-        showLiveLog("BBL coordinates match no registered municipal footprint records.");
+        showLiveLog("BBL match not found in active tax records.");
       }
     }
   } catch (err) {
-    showLiveLog("Connection sequence stalled inside remote data pools.");
+    showLiveLog("API data feed processing roadblock encountered.");
     console.error(err);
   }
 
-  // Safety Unlock sequence overrides interface freeze anomalies 
   resetButton(buttonId, originalButtonText);
 
-  // Write variables straight to DOM target nodes
+  // Safely map variables out to template UI DOM targets
   document.getElementById("infoAddress").innerText = finalAddress;
   document.getElementById("infoBbl").innerText = finalBbl;
   document.getElementById("infoZoning").innerText = finalZoning;
@@ -187,7 +187,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   document.getElementById("infoSpecial").innerText = finalSpecial;
   document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-  // Regex string extractor removes design suffix masks without array mutation drops
+  // Suffix strip parser string sanitization machine
   var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
   var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
   if (zoneMatch && zoneMatch[1]) {
@@ -196,3 +196,11 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     cleanKey = cleanKey.substring(0, 2);
   }
 
+  var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { 
+    stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." 
+  };
+
+  var stdMaxZfa = Math.round(finalLotArea * lookup.stdFar);
+  var uapMaxZfa = Math.round(finalLotArea * lookup.uapFar);
+
+  document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";

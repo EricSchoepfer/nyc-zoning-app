@@ -13,35 +13,53 @@ const zoningDictionary = {
     "R8": { stdFar: 6.02, uapFar: 7.20, resUses: "High-Density Urban Apartments.", cfUses: "Hospitals, full non-profit complexes." },
     "R10": { stdFar: 10.00, uapFar: 12.00, resUses: "Maximum Density Urban Residential.", cfUses: "Full hospitals, research libraries." },
     "C4": { stdFar: 3.40, uapFar: 4.00, resUses: "Mixed-use commercial-residential.", cfUses: "Care assets, local training spaces." },
+    "C4-6": { stdFar: 10.00, uapFar: 12.00, resUses: "High-Bulk Commercial Skyscraper Core.", cfUses: "Institutional assets, medical research towers." },
     "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
 };
 
+let searchTimeout = null;
+
 // TRACK 1: Filtered Address Input Button Handler
-document.getElementById("addressBtn").onclick = async function() {
+document.getElementById("addressBtn").onclick = function() {
     hideLiveLog();
     var boroCode = document.getElementById("addressBoroSelect").value;
     var addressText = document.getElementById("addressInput").value;
     if (!addressText || addressText.trim() === "") { alert("Please enter an address."); return; }
-    document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     
-    // INDEXED FILTER PIECE: Restricts lookups to specific boroughs to reduce text workload and bypass timeouts
-    var url = "https://cityofnewyork.us" + boroCode + "&$where=address%20like%20%27%25" + encodeURIComponent(addressText.toUpperCase()) + "%25%27&$limit=1";
-    await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
+    document.getElementById("addressBtn").innerText = "Pausing for safety...";
+    document.getElementById("addressBtn").disabled = true;
+
+    // AUTOMATED PAUSE FILTER: Clears any quick clicking and delays request transmission by 750ms to safeguard connectivity
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async function() {
+        document.getElementById("addressBtn").innerText = "Querying Master PLUTO...";
+        
+        // RE-ENGINEERED STRATEGY: Points to the live core PLUTO dataset and strips down query size with an exact address field match rule
+        var url = "https://cityofnewyork.us" + boroCode + "&address=" + encodeURIComponent(addressText.trim().toUpperCase());
+        await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
+    }, 750);
 };
 
 // TRACK 2: Borough/Block/Lot Button Handler
-document.getElementById("bblBtn").onclick = async function() {
+document.getElementById("bblBtn").onclick = function() {
     hideLiveLog();
     var boro = document.getElementById("boroughInput").value;
     var blockRaw = document.getElementById("blockInput").value;
     var lotRaw = document.getElementById("lotInput").value;
     if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") { alert("Fill out BBL fields."); return; }
-    document.getElementById("bblBtn").innerText = "Assembling Live Map...";
-    var block = String(blockRaw.trim()).padStart(5, '0');
-    var lot = String(lotRaw.trim()).padStart(4, '0');
     
-    var url = "https://cityofnewyork.us" + boro + block + lot;
-    await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
+    document.getElementById("bblBtn").innerText = "Pausing for safety...";
+    document.getElementById("bblBtn").disabled = true;
+
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async function() {
+        document.getElementById("bblBtn").innerText = "Assembling Live Map...";
+        var block = String(blockRaw.trim()).padStart(5, '0');
+        var lot = String(lotRaw.trim()).padStart(4, '0');
+        
+        var url = "https://cityofnewyork.us" + boro + block + lot;
+        await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile");
+    }, 750);
 };
 
 function showLiveLog(msg) {
@@ -68,13 +86,13 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
             finalSpecial = record.spdist1 || "None";
             finalLotArea = parseFloat(record.lotarea) || finalLotArea;
         } else { 
-            showLiveLog("Location not found in active borough list records. Confirm text numbers."); 
+            showLiveLog("Location not found in active municipal records. Double-check your exact spelling and building number."); 
         }
     } catch (err) { 
-        showLiveLog("API Connection roadblock. Reverting to sandbox tracks."); 
+        showLiveLog("API Connection roadblock. Reverting to local tracks."); 
     }
 
-    // Print raw fetched parameters to screen layout channels
+    // Print values to screen fields
     document.getElementById("infoAddress").innerText = finalAddress;
     document.getElementById("infoBbl").innerText = finalBbl;
     document.getElementById("infoZoning").innerText = finalZoning;
@@ -82,7 +100,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     document.getElementById("infoSpecial").innerText = finalSpecial;
     document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-    // PURE REGEX CLEANER: Safely turns "R7-1" into "R7" dynamically without triggering array split crashes
+    // PURE REGEX CLEANER: Strips sub-suffixes safely without triggering list split errors (e.g. "R7-1" -> "R7")
     var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
     if (zoneMatch && zoneMatch[1]) {
@@ -115,7 +133,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
     var specialNotice = "Standard underlying city-wide framework text rules apply.";
     if (finalSpecial !== "None" && finalSpecial !== "") {
-        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Controls Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
+        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
     }
 
     document.getElementById("tableBody").innerHTML = 
@@ -125,6 +143,3 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         "<tr><td><b>ZR 23-431 / 34-111</b></td><td>Yard & Setback Regulations</td><td>Rear open space yards scale back building lines from lot perimeters.</td><td>Zero-lot-line commercial footprints drop yard constraints fully.</td></tr>" +
         "<tr><td><b>ZR 23-432 / 34-111</b></td><td>Height & Base Setbacks</td><td>Baseline capping keeps maximum heights lower (e.g., 125'-0\").</td><td>UAP tracks expand envelope heights higher (e.g., up to 145'-0\").</td></tr>";
 
-    document.getElementById("resultsWrapper").style.display = "block";
-    document.getElementById(buttonId).innerText = originalButtonText;
-}

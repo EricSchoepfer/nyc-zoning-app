@@ -67,9 +67,9 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
         
         if (data && data.contents) {
             var cleanJson = JSON.parse(data.contents);
-            // CRITICAL FIX: Safe target cloning isolates row data without array index crashes
+            // FIXED UNBOXING ARRAY MATCH: Targets position zero index with correct lowercase syntax variables
             if (cleanJson && cleanJson.length > 0) {
-                var record = Object.assign({}, cleanJson[0]); 
+                var record = cleanJson[0]; 
                 finalAddress = record.address || fallbackLabel;
                 finalBbl = record.bbl || "N/A";
                 finalZoning = record.zonedist1 || "R6";

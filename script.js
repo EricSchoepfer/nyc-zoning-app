@@ -16,15 +16,16 @@ const zoningDictionary = {
     "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
 };
 
-// TRACK 1: Address Input Button Handler
+// TRACK 1: Filtered Address Input Button Handler
 document.getElementById("addressBtn").onclick = async function() {
     hideLiveLog();
+    var boroCode = document.getElementById("addressBoroSelect").value;
     var addressText = document.getElementById("addressInput").value;
     if (!addressText || addressText.trim() === "") { alert("Please enter an address."); return; }
     document.getElementById("addressBtn").innerText = "Querying Live PLUTO...";
     
-    // Connects to the active city open data portal via secure HTTPS
-    var url = "https://cityofnewyork.us" + encodeURIComponent(addressText.toUpperCase()) + "%25%27&$limit=1";
+    // INDEXED FILTER PIECE: Restricts lookups to specific boroughs to reduce text workload and bypass timeouts
+    var url = "https://cityofnewyork.us" + boroCode + "&$where=address%20like%20%27%25" + encodeURIComponent(addressText.toUpperCase()) + "%25%27&$limit=1";
     await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
 };
 
@@ -51,7 +52,7 @@ function showLiveLog(msg) {
 
 function hideLiveLog() { document.getElementById("liveLog").style.display = "none"; }
 
-// UNIVERSAL RE-ENGINEERED LIVE INTERFACE PIPELINE
+// LIVE PIPELINE COMPILER ENGINE
 async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText) {
     var finalAddress = fallbackLabel, finalBbl = "N/A", finalZoning = "R6", finalOverlay = "None", finalSpecial = "None", finalLotArea = 4000;
     try {
@@ -67,10 +68,10 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
             finalSpecial = record.spdist1 || "None";
             finalLotArea = parseFloat(record.lotarea) || finalLotArea;
         } else { 
-            showLiveLog("Location not found in active municipal records. Confirm block parameters."); 
+            showLiveLog("Location not found in active borough list records. Confirm text numbers."); 
         }
     } catch (err) { 
-        showLiveLog("API Connection error. Utilizing sandbox local tracks."); 
+        showLiveLog("API Connection roadblock. Reverting to sandbox tracks."); 
     }
 
     // Print raw fetched parameters to screen layout channels
@@ -81,7 +82,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     document.getElementById("infoSpecial").innerText = finalSpecial;
     document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
 
-    // PURE REGEX CLEANER: Strips dashes, sub-suffixes, and multi-zone dividers cleanly (e.g. "R7-1" -> "R7")
+    // PURE REGEX CLEANER: Safely turns "R7-1" into "R7" dynamically without triggering array split crashes
     var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
     if (zoneMatch && zoneMatch[1]) {
@@ -92,7 +93,6 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
     var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." };
     
-    // Process Floor Area Multipliers
     var stdMaxZfa = Math.round(finalLotArea * lookup.stdFar);
     var uapMaxZfa = Math.round(finalLotArea * lookup.uapFar);
 
@@ -106,7 +106,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
     var firstLetter = cleanKey.charAt(0);
     if (finalOverlay !== "None" && finalOverlay !== "") {
-        document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + finalOverlay + "):</b><br>Allows local retail stores and service shops (<b>Use Group VI</b>).";
+        document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + finalOverlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
     } else if (firstLetter === "C") {
         document.getElementById("commUseText").innerHTML = "<b>Permitted (Commercial Zone):</b><br>Broad commercial retail operations allowed across all floorplates.";
     } else if (firstLetter === "M") {
@@ -115,7 +115,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
     var specialNotice = "Standard underlying city-wide framework text rules apply.";
     if (finalSpecial !== "None" && finalSpecial !== "") {
-        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
+        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Controls Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
     }
 
     document.getElementById("tableBody").innerHTML = 

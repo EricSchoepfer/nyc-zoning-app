@@ -19,7 +19,7 @@ const zoningDictionary = {
 
 // Global Initialization Wrapper maps tracking paths securely
 function initTracker() {
-  console.log("App initialization matrix loaded.");
+  console.log("Zoning matrix system ready.");
 
   var addressBtn = document.getElementById("addressBtn");
   if (addressBtn) {
@@ -116,7 +116,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      // CRITICAL FIX: Drill directly into array element [0] to extract object properties cleanly
+      // FIXED HERE: Target index 0 inside the API array container safely
       var record = data[0]; 
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
@@ -156,7 +156,8 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var parsed = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var matches = parsed.match(/^([A-Z]+[0-9]+)/);
     if (matches && matches[1]) {
-      cleanKey = matches[1]; // CRITICAL FIX: Target index [1] of RegExp match array to extract text token cleanly
+      // FIXED HERE: Pull item index 1 from the regular expression match array container
+      cleanKey = matches[1]; 
     } else {
       cleanKey = parsed.substring(0, 2);
     }
@@ -196,3 +197,4 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
   var table = document.getElementById("tableBody");
   if (table) {
+    table.innerHTML = 

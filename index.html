@@ -1,346 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Pro Zoning Dual-Track Tracker</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NYC Pro Zoning Dual-Track Tracker</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>NYC Zoning Cross-Reference App</h1>
+      <p class="subtitle">Index Filtered Search Engine: Real-Time Address & Tax Lot Calculator</p>
+    </header>
 
-    <div class="container">
-        <header>
-            <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Index Filtered Search Engine: Real-Time Address & Tax Lot Calculator</p>
-        </header>
-
-        <!-- Input Panel Section -->
-        <div class="card">
-            <h2>1. Select Property Query Path (Address or BBL)</h2>
-            <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
-            
-            <div class="search-grid">
-                <!-- Track A: Index-Filtered Address Input Panel -->
-                <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
-                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
-                    <div style="margin-top: 10px; display: flex; gap: 8px;">
-                        <!-- UPDATE THIS BLOCK IN YOUR INDEX.HTML -->
-                <select id="addressBoroSelect" style="width: 45%;">
-                  <option value="BK">Brooklyn</option>
-                    <option value="MN">Manhattan</option>
-                  <option value="QN">Queens</option>
-                  <option value="BX">Bronx</option>
-                      <option value="SI">Staten Island</option>
-                    </select>
-
-                        <input type="text" id="addressInput" placeholder="e.g. 124 Grand Avenue" value="124 Grand Avenue">
-                    </div>
-                    <button type="button" id="addressBtn">Search Address Profile</button>
-                </div>
-                
-                <!-- Track B: BBL Input Panel -->
-                <div>
-                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
-                    <div class="bbl-box">
-                        <div>
-                            <select id="boroughInput">
-                                <option value="3">3 - Brooklyn</option>
-                                <option value="1">1 - Manhattan</option>
-                                <option value="2">2 - Bronx</option>
-                                <option value="4">4 - Queens</option>
-                                <option value="5">5 - Staten Island</option>
-                            </select>
-                        </div>
-                        <div>
-                            <input type="text" id="blockInput" placeholder="Block" value="1964">
-                        </div>
-                        <div>
-                            <input type="text" id="lotInput" placeholder="Lot" value="1">
-                        </div>
-                    </div>
-                    <button type="button" id="bblBtn">Search BBL Profile</button>
-                </div>
-            </div>
-            
-            <!-- System Logger Feedback Panel -->
-            <div id="liveLog"></div>
-        </div>
-
-        <!-- Display Layout Sheets Workspace -->
-        <div id="resultsWrapper" style="display: none;">
-            
-            <!-- Result Parameters Dashboard -->
-            <div class="card">
-                <h2>2. Active ZoLa Site Parameters</h2>
-                <div class="info-grid">
-                    <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
-                    <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
-                    <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
-                    <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
-                    <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
-                    <div class="info-item"><strong>Lot Square Footage:</strong> <span id="infoLotArea">-</span></div>
-                </div>
-            </div>
-
-            <!-- Dynamic FAR Matrix Output Block -->
-            <div class="card">
-                <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-                <p>Calculations scaled dynamically using official municipal lot area metrics.</p>
-                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
-                    <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
-                        <div class="metric-label">Standard Baseline FAR</div>
-                        <div class="metric-val" id="lblStdFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
-                    </div>
-                    <div class="metric-box" style="border-left: 5px solid #0d9488;">
-                        <div class="metric-label">UAP Affordable Housing FAR</div>
-                        <div class="metric-val" id="lblUapFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Allowed Land Uses Matrix -->
-            <div class="card">
-                <h2>4. Complete Use Group Allowance & Mapped Elements Matrix</h2>
-                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-                    <div class="info-item" style="background: white; border-color: #1e3a8a;">
-                        <strong style="color: #1e3a8a;">🏠 Allowed Residential Uses</strong>
-                        <div id="resUseText" style="margin-top: 6px; color: #374151;">-</div>
-                    </div>
-                    <div class="info-item" style="background: white; border-color: #0d9488;">
-                        <strong style="color: #0d9488;">🏥 Allowed Community Facility Uses</strong>
-                        <div id="cfUseText" style="margin-top: 6px; color: #374151;">-</div>
-                    </div>
-                    <div class="info-item" style="background: white; border-color: #f59e0b;">
-                        <strong style="color: #f59e0b;">🏭 Allowed Commercial / Overlay Uses</strong>
-                        <div id="commUseText" style="margin-top: 6px; color: #374151;">-</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reference Table -->
-            <div class="card">
-                <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th width="15%">ZR Citation</th>
-                            <th width="20%">Zoning Parameter</th>
-                            <th width="32%">Standard Baseline Path</th>
-                            <th width="33%">Bonus / Contextual Path</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-
-        </div>
-    </div>
-<script>
-// Universal NYC Suffix-Proof Zoning Code Reference Table
-const zoningDictionary = {
-  "R1": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
-  "R2": { stdFar: 0.50, uapFar: 0.50, resUses: "Single-Family Detached Residences.", cfUses: "Basic community facilities." },
-  "R3": { stdFar: 0.50, uapFar: 0.60, resUses: "Low-Rise Multi-Family Contextual.", cfUses: "Houses of worship, clinics, schools." },
-  "R3A": { stdFar: 0.50, uapFar: 0.60, resUses: "Detached contextual single/two family homes.", cfUses: "Houses of worship, medical practices." },
-  "R4": { stdFar: 0.75, uapFar: 0.90, resUses: "Detached/Semi-Detached rowhouses.", cfUses: "Local schools, houses of worship." },
-  "R4A": { stdFar: 0.75, uapFar: 0.90, resUses: "Contextual detached residential profiles.", cfUses: "Ambulatory and local learning hubs." },
-  "R5": { stdFar: 1.25, uapFar: 1.65, resUses: "Single/Two-Family Rowhouses.", cfUses: "Houses of worship, medical offices." },
-  "R5B": { stdFar: 1.35, uapFar: 1.65, resUses: "Contextual traditional multi-rowhouses.", cfUses: "Local nonprofit community assets." },
-  "R6": { stdFar: 2.20, uapFar: 3.60, resUses: "Medium-Density Apartment complexes.", cfUses: "Schools, medical centers, libraries." },
-  "R6B": { stdFar: 2.00, uapFar: 2.20, resUses: "Traditional Contextual Rowhouses.", cfUses: "Neighborhood community assets." },
-  "R7": { stdFar: 3.44, uapFar: 4.60, resUses: "Medium-High Density Apartments.", cfUses: "Healthcare services, schools." },
-  "R7A": { stdFar: 4.00, uapFar: 4.60, resUses: "High-Density Quality Housing.", cfUses: "Ambulatory care assets, schools." },
-  "R7X": { stdFar: 5.00, uapFar: 6.00, resUses: "Contextual Multi-Family Envelopes.", cfUses: "Medical facilities, schools, libraries." },
-  "R8": { stdFar: 6.02, uapFar: 7.20, resUses: "High-Density Urban Apartments.", cfUses: "Hospitals, full non-profit complexes." },
-  "R8A": { stdFar: 6.02, uapFar: 7.20, resUses: "High-density Contextual Quality Housing.", cfUses: "Hospitals and broad community facilities." },
-  "R10": { stdFar: 10.00, uapFar: 12.00, resUses: "Maximum Density Urban Residential.", cfUses: "Full hospitals, research libraries." },
-  "C1": { stdFar: 1.00, uapFar: 1.00, resUses: "Residential paths controlled by underlying overlay.", cfUses: "Broad retail and community space paths." },
-  "C2": { stdFar: 2.00, uapFar: 2.00, resUses: "Residential paths controlled by underlying overlay.", cfUses: "Local service shops, repair centers." },
-  "C4": { stdFar: 3.40, uapFar: 4.00, resUses: "Mixed-use commercial-residential.", cfUses: "Care assets, local training spaces." },
-  "C4-6": { stdFar: 10.00, uapFar: 12.00, resUses: "High-Bulk Commercial Skyscraper Core.", cfUses: "Institutional assets, medical research towers." },
-  "M1": { stdFar: 1.00, uapFar: 1.00, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard facilities." }
-};
-
-let searchTimeout = null;
-
-// Attach click events safely down at the script execution level
-document.addEventListener("DOMContentLoaded", function() {
-  
-  var addrBtn = document.getElementById("addressBtn");
-  if (addrBtn) {
-    addrBtn.onclick = function(e) {
-      e.preventDefault();
-      hideLiveLog();
+    <!-- 1. Input Panel Section -->
+    <div class="card">
+      <h2>1. Select Property Query Path (Address or BBL)</h2>
+      <p>Filter your request by selecting a borough first to prevent city server timeouts:</p>
       
-      var boroCode = document.getElementById("addressBoroSelect").value;
-      var addressText = document.getElementById("addressInput").value;
+      <div class="search-grid">
+        <!-- Track A: Index-Filtered Address Input Panel -->
+        <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
+          <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <select id="addressBoroSelect" style="width: 45%;">
+              <option value="BK">Brooklyn</option>
+              <option value="MN">Manhattan</option>
+              <option value="QN">Queens</option>
+              <option value="BX">Bronx</option>
+              <option value="SI">Staten Island</option>
+            </select>
+            <input type="text" id="addressInput" placeholder="e.g. 124 Grand Avenue" value="124 Grand Avenue">
+          </div>
+          <button type="button" id="addressBtn">Search Address Profile</button>
+        </div>
 
-      if (!addressText || addressText.trim() === "") {
-        alert("Please enter an address.");
-        return;
-      }
+        <!-- Track B: BBL Input Panel -->
+        <div>
+          <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
+          <div class="bbl-box">
+            <div>
+              <select id="boroughInput">
+                <option value="3">3 - Brooklyn</option>
+                <option value="1">1 - Manhattan</option>
+                <option value="2">2 - Bronx</option>
+                <option value="4">4 - Queens</option>
+                <option value="5">5 - Staten Island</option>
+              </select>
+            </div>
+            <div>
+              <input type="text" id="blockInput" placeholder="Block" value="1964">
+            </div>
+            <div>
+              <input type="text" id="lotInput" placeholder="Lot" value="1">
+            </div>
+          </div>
+          <button type="button" id="bblBtn">Search BBL Profile</button>
+        </div>
+      </div>
 
-      addrBtn.innerText = "Pausing for safety...";
-      addrBtn.disabled = true;
+      <!-- System Logger Feedback Panel -->
+      <div id="liveLog"></div>
+    </div>
 
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(async function() {
-        try {
-          addrBtn.innerText = "Querying ZoLa Engine...";
-          var fullBoroMap = { "BK": "Brooklyn", "MN": "Manhattan", "QN": "Queens", "BX": "Bronx", "SI": "Staten Island" };
-          var searchString = addressText.trim() + ", " + fullBoroMap[boroCode] + ", NY";
-          var url = "https://planninglabs.nyc" + encodeURIComponent(searchString);
+    <!-- 2. Display Layout Sheets Workspace -->
+    <div id="resultsWrapper" style="display: none;">
+      
+      <!-- Result Parameters Dashboard -->
+      <div class="card">
+        <h2>2. Active ZoLa Site Parameters</h2>
+        <div class="info-grid">
+          <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
+          <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
+          <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
+          <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
+          <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
+          <div class="info-item"><strong>Lot Square Footage:</strong> <span id="infoLotArea">-</span></div>
+        </div>
+      </div>
 
-          await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile", true);
-        } catch(err) {
-          resetButton("addressBtn", "Search Address Profile");
-          showLiveLog("ZoLa API interface connection dropped.");
-        }
-      }, 750);
-    };
-  }
+      <!-- Dynamic FAR Matrix Output Block -->
+      <div class="card">
+        <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
+        <p>Calculations scaled dynamically using official munitipal lot area metrics.</p>
+        <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
+          <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
+            <div class="metric-label">Standard Baseline FAR</div>
+            <div class="metric-val" id="lblStdFar">-</div>
+            <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
+          </div>
+          <div class="metric-box" style="border-left: 5px solid #0d9488;">
+            <div class="metric-label">UAP Affordable Housing FAR</div>
+            <div class="metric-val" id="lblUapFar">-</div>
+            <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
+          </div>
+        </div>
+      </div>
 
-  var taxBtn = document.getElementById("bblBtn");
-  if (taxBtn) {
-    taxBtn.onclick = function(e) {
-      e.preventDefault();
-      hideLiveLog();
+      <!-- Allowed Land Uses Matrix -->
+      <div class="card">
+        <h2>4. Complete Use Group Allowance & Mapped Elements Matrix</h2>
+        <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+          <div class="info-item" style="background: white; border-color: #1e3a8a;">
+            <strong style="color: #1e3a8a;">🏠 Allowed Residential Uses</strong>
+            <div id="resUseText" style="margin-top: 6px; color: #374151;">-</div>
+          </div>
+          <div class="info-item" style="background: white; border-color: #0d9488;">
+            <strong style="color: #0d9488;">🏥 Allowed Community Facility Uses</strong>
+            <div id="cfUseText" style="margin-top: 6px; color: #374151;">-</div>
+          </div>
+          <div class="info-item" style="background: white; border-color: #f59e0b;">
+            <strong style="color: #f59e0b;">🏭 Allowed Commercial / Overlay Uses</strong>
+            <div id="commUseText" style="margin-top: 6px; color: #374151;">-</div>
+          </div>
+        </div>
+      </div>
 
-      var boro = document.getElementById("boroughInput").value;
-      var blockRaw = document.getElementById("blockInput").value;
-      var lotRaw = document.getElementById("lotInput").value;
+      <!-- Reference Table -->
+      <div class="card">
+        <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
+        <table>
+          <thead>
+            <tr>
+              <th width="15%">ZR Citation</th>
+              <th width="20%">Zoning Parameter</th>
+              <th width="32%">Standard Baseline Path</th>
+              <th width="33%">Bonus / Contextual Path</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
 
-      if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
-        alert("Fill out BBL fields.");
-        return;
-      }
+    </div>
+  </div>
 
-      taxBtn.innerText = "Pausing for safety...";
-      taxBtn.disabled = true;
-
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(async function() {
-        try {
-          taxBtn.innerText = "Connecting Tax Map...";
-          var block = String(blockRaw.trim()).padStart(5, '0');
-          var lot = String(lotRaw.trim()).padStart(4, '0');
-          var computedBbl = boro + block + lot;
-          var url = "https://cityofnewyork.us" + computedBbl;
-
-          await executeQueryPipeline(url, "BBL Lookup Match", "bblBtn", "Search BBL Profile", false);
-        } catch(err) {
-          resetButton("bblBtn", "Search BBL Profile");
-          showLiveLog("Tax registry database link failed.");
-        }
-      }, 750);
-    };
-  }
-});
-
-function resetButton(buttonId, originalButtonText) {
-  var btn = document.getElementById(buttonId);
-  if (btn) {
-    btn.innerText = originalButtonText;
-    btn.disabled = false;
-  }
-}
-
-function showLiveLog(msg) {
-  var logger = document.getElementById("liveLog");
-  if (logger) {
-    logger.innerText = "System Notice: " + msg;
-    logger.style.display = "block";
-  }
-}
-
-function hideLiveLog() {
-  var logger = document.getElementById("liveLog");
-  if (logger) logger.style.display = "none";
-}
-
-async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalButtonText, isZoLaGeosearch) {
-  var finalAddress = fallbackLabel, finalBbl = "N/A", finalZoning = "R6", finalOverlay = "None", finalSpecial = "None", finalLotArea = 4000;
-
-  try {
-    var res = await fetch(queryUrl);
-    if (!res.ok) throw new Error("Connection Failure");
-    var data = await res.json();
-
-    if (isZoLaGeosearch) {
-      if (data && data.features && data.features.length > 0) {
-        var properties = data.features[0].properties; // FIXED: Added array indicator lookup parameter
-        finalAddress = properties.label || fallbackLabel;
-        finalBbl = properties.pad_bbl || "N/A";
-        
-        if (finalBbl !== "N/A") {
-          var backupUrl = "https://cityofnewyork.us" + finalBbl;
-          var backupRes = await fetch(backupUrl);
-          if (backupRes.ok) {
-            var backupData = await backupRes.json();
-            if (backupData && backupData.length > 0) {
-              var plutoRecord = backupData[0]; // FIXED: Array mapping configuration lookup 
-              finalZoning = plutoRecord.zonedist1 || "R6";
-              finalOverlay = plutoRecord.overlay1 || "None";
-              finalSpecial = plutoRecord.spdist1 || "None";
-              finalLotArea = parseFloat(plutoRecord.lotarea) || finalLotArea;
-            }
-          }
-        }
-        document.getElementById("resultsWrapper").style.display = "block";
-      } else {
-        showLiveLog("ZoLa engine matched no spelling variations.");
-      }
-    } else {
-      if (data && data.length > 0) {
-        var record = data[0]; // FIXED: Array entry point lookup correction
-        finalAddress = record.address || fallbackLabel;
-        finalBbl = record.bbl || "N/A";
-        finalZoning = record.zonedist1 || "R6";
-        finalOverlay = record.overlay1 || "None";
-        finalSpecial = record.spdist1 || "None";
-        finalLotArea = parseFloat(record.lotarea) || finalLotArea;
-        
-        document.getElementById("resultsWrapper").style.display = "block";
-      } else {
-        showLiveLog("BBL tax key matched no database blueprints.");
-      }
-    }
-  } catch (err) {
-    showLiveLog("Remote server sequence dropped connection markers.");
-    console.error(err);
-  }
-
-  resetButton(buttonId, originalButtonText);
-
-  // Print text variables cleanly out to workspace nodes
-  document.getElementById("infoAddress").innerText = finalAddress;
-  document.getElementById("infoBbl").innerText = finalBbl;
-  document.getElementById("infoZoning").innerText = finalZoning;
-  document.getElementById("infoOverlay").innerText = finalOverlay;
-  document.getElementById("infoSpecial").innerText = finalSpecial;
-  document.getElementById("infoLotArea").innerText = finalLotArea.toLocaleString() + " SF";
-
-  // Suffix strip parsing engine
-  var cleanKey = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-  if (zoneMatch && zoneMatch[1]) {
-    cleanKey = zoneMatch[1]; // FIXED: Safe string extraction assignment token matching matrix keys
-  } else {
-    cleanKey = cleanKey.substring(0, 2);
-  }
-
-  var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { 
-    stdFar: 2.00, uapFar: 2.40, resUses: "Multi-family housing permitted.", cfUses: "Community facility tracks open." 
-  };
-
-  var stdMaxZfa = Math.round(finalLotArea * lookup.stdFar);
-  var uapMaxZfa = Math.round(finalLotArea * lookup.uapFar);
-
-  document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
-  document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
-
-    
+  <!-- Script placed strictly down here so DOM nodes load first -->
+  <script src="script.js"></script>
 </body>
 </html>

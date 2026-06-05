@@ -19,17 +19,27 @@ const zoningDictionary = {
 
 // Global Initialization Wrapper
 function initTracker() {
-  console.log("Zoning Tracker Initialized Successfully.");
+  console.log("App initialization layer loaded.");
 
   var addressBtn = document.getElementById("addressBtn");
   if (addressBtn) {
     addressBtn.onclick = async function() {
       hideLiveLog();
-      var boroCode = document.getElementById("addressBoroSelect").value;
-      var addressText = document.getElementById("addressInput").value;
+      
+      var boroSelect = document.getElementById("addressBoroSelect");
+      var addressInput = document.getElementById("addressInput");
+      
+      if (!boroSelect || !addressInput) {
+        alert("HTML layout error: Missing input fields.");
+        return;
+      }
+      
+      var boroCode = boroSelect.value;
+      var addressText = addressInput.value;
 
+      // DEFENSIVE PROTECTION: Check if field is blank BEFORE running modifications
       if (!addressText || addressText.trim() === "") {
-        alert("Please enter an address.");
+        alert("Please enter a street address.");
         return;
       }
 
@@ -41,7 +51,7 @@ function initTracker() {
       cleanAddress = cleanAddress.replace(/ AVENUE$/, " AVE").replace(/ STREET$/, " ST").replace(/ ROAD$/, " RD").replace(/ BOULEVARD$/, " BLVD");
 
       var url = "https://cityofnewyork.us?" +
-                "borough=" + encodeURIComponent(fullBoroMap[boroCode]) + 
+                "borough=" + encodeURIComponent(fullBoroMap[boroCode] || "BROOKLYN") + 
                 "&$where=address LIKE '" + encodeURIComponent(cleanAddress) + "%'";
 
       await executeQueryPipeline(url, addressText, "addressBtn", "Search Address Profile");
@@ -52,12 +62,22 @@ function initTracker() {
   if (bblBtn) {
     bblBtn.onclick = async function() {
       hideLiveLog();
-      var boro = document.getElementById("boroughInput").value;
-      var blockRaw = document.getElementById("blockInput").value;
-      var lotRaw = document.getElementById("lotInput").value;
+      
+      var boroInput = document.getElementById("boroughInput");
+      var blockInput = document.getElementById("blockInput");
+      var lotInput = document.getElementById("lotInput");
+      
+      if (!boroInput || !blockInput || !lotInput) {
+        alert("HTML layout error: Missing BBL elements.");
+        return;
+      }
+
+      var boro = boroInput.value;
+      var blockRaw = blockInput.value;
+      var lotRaw = lotInput.value;
 
       if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") {
-        alert("Fill out BBL fields.");
+        alert("Please fill out all BBL fields.");
         return;
       }
 
@@ -76,7 +96,7 @@ function initTracker() {
   }
 }
 
-// Ensure execution happens no matter how browser indexes files
+// Ensure execution happens reliably regardless of file ordering rules
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initTracker);
 } else {
@@ -105,7 +125,7 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     var data = await res.json();
 
     if (data && data.length > 0) {
-      var record = data[0]; // Fix: Explicitly drill into array element zero
+      var record = data; // Target element object matrix array zero
       finalAddress = record.address || fallbackLabel;
       finalBbl = record.bbl || "N/A";
       finalZoning = record.zonedist1 || "R6";
@@ -123,14 +143,14 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
     console.error(err);
   }
 
-  // Absolute Recovery Unlock Mechanism
+  // Restore button control tracking states safely
   var btn = document.getElementById(buttonId);
   if (btn) {
     btn.innerText = originalButtonText;
     btn.disabled = false;
   }
 
-  // Print raw attributes
+  // Print text variables out to page elements
   if (document.getElementById("infoAddress")) document.getElementById("infoAddress").innerText = finalAddress;
   if (document.getElementById("infoBbl")) document.getElementById("infoBbl").innerText = finalBbl;
   if (document.getElementById("infoZoning")) document.getElementById("infoZoning").innerText = finalZoning;
@@ -143,8 +163,8 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
   if (finalZoning) {
     var parsed = finalZoning.toUpperCase().replace(/[^A-Z0-9]/g, "");
     var matches = parsed.match(/^([A-Z]+[0-9]+)/);
-    if (matches && matches[1]) {
-      cleanKey = matches[1];
+    if (matches && matches) {
+      cleanKey = matches; // Extract raw text substring value token cleanly
     } else {
       cleanKey = parsed.substring(0, 2);
     }
@@ -179,10 +199,3 @@ async function executeQueryPipeline(queryUrl, fallbackLabel, buttonId, originalB
 
   var specialNotice = "Standard underlying city-wide framework text rules apply.";
   if (finalSpecial !== "None" && finalSpecial !== "") {
-    specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + finalSpecial + "):</b> Custom setbacks take absolute priority.";
-  }
-
-  var table = document.getElementById("tableBody");
-  if (table) {
-    table.innerHTML = 
-      "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Standalone residential and community facility options govern footprints.</td><td>" + specialNotice + "</td></tr>" + 

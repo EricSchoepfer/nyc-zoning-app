@@ -75,6 +75,8 @@ function showLiveLog(msg) {
 function hideLiveLog() { document.getElementById("liveLog").style.display = "none"; }
 
 function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address) {
+    document.getElementById("resultsWrapper").style.display = "block";
+    
     document.getElementById("infoAddress").innerText = address;
     document.getElementById("infoBbl").innerText = bbl;
     document.getElementById("infoZoning").innerText = zoning;
@@ -100,7 +102,8 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address
     document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
     document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
 
-    var firstLetter = zoning.charAt(0);
+    // CRITICAL SAFETY BOUND FIX: Pull primary character safely without token loop deadlocks
+    var firstLetter = zoning ? zoning.charAt(0) : "R";
     if (overlay !== "None" && overlay !== "") {
         document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + overlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
     } else if (firstLetter === "C") {
@@ -116,7 +119,6 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address
         specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + special + "):</b> Custom setbacks take priority.";
     }
 
-    // TAILORED DYNAMIC COMPILER: Injects status tags, floor plate limits, and required calculations cleanly
     document.getElementById("tableBody").innerHTML = 
         "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Residential and Community Facility footprints can expand across full floorplates up to maximum zoning envelope limits.</td><td>Commercial retail uses are restricted to the ground level or first floor via active overlays.</td><td><span style='color:#0d9488; font-weight:bold;'>✔️ MANDATORY</span></td></tr>" +
         "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Requires specific lot sizes for individual building types to proceed with parcel subdivisions.</td><td>Protects historic narrower rowhouses from redevelopment penalties.</td><td><span style='color:#0d9488; font-weight:bold;'>✔️ MANDATORY</span></td></tr>" +

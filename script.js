@@ -75,15 +75,23 @@ function showLiveLog(msg) {
 function hideLiveLog() { document.getElementById("liveLog").style.display = "none"; }
 
 function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address) {
-    var cleanKey = zoning ? zoning.toUpperCase().replace(/[^A-Z0-9]/g, "") : "R6";
-    var zoneMatch = cleanKey.match(/^([A-Z]+[0-9]+)/);
-    if (zoneMatch && zoneMatch) {
-        cleanKey = zoneMatch[0];
+    // FIXED COMPILER DESTRUCTION: Safely isolates plain strings from objects to shield script thread execution
+    var baseKey = zoning ? String(zoning).toUpperCase().replace(/[^A-Z0-9-]/g, "") : "R6";
+    var finalKey = "R6";
+
+    var zoneMatch = baseKey.match(/^([A-Z]+[0-9]+)/);
+    if (zoneMatch && zoneMatch[1]) {
+        finalKey = String(zoneMatch[1]);
     } else {
-        cleanKey = cleanKey.substring(0, 2);
+        finalKey = baseKey.substring(0, 2);
+    }
+    
+    // Safety check for exact hyphenated splits (e.g., R7-1 base mapping alignment)
+    if (zoningDictionary[baseKey]) {
+        finalKey = baseKey;
     }
 
-    var lookup = zoningDictionary[cleanKey] || zoningDictionary[cleanKey.substring(0, 2)] || { stdFar: 2.00, uapFar: 2.40, cfFar: 2.00, resUses: "Housing allowed.", cfUses: "Facility allowed." };
+    var lookup = zoningDictionary[finalKey] || zoningDictionary[finalKey.substring(0, 2)] || { stdFar: 2.00, uapFar: 2.40, cfFar: 2.00, resUses: "Housing allowed.", cfUses: "Facility allowed." };
     
     var stdMaxZfa = Math.round(lotArea * lookup.stdFar);
     var uapMaxZfa = Math.round(lotArea * lookup.uapFar);
@@ -101,7 +109,7 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address
     document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
     document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
 
-    var firstLetter = cleanKey.charAt(0);
+    var firstLetter = finalKey.charAt(0);
     if (overlay !== "None" && overlay !== "") {
         document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + overlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
     } else if (firstLetter === "C") {
@@ -119,5 +127,5 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address
 
     document.getElementById("tableBody").innerHTML = 
         "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right <br><span style='color:#0d9488; font-weight:bold;'>[✔️ MANDATORY]</span></td><td>Residential and Community Facility footprints can expand across full floorplates up to maximum zoning envelope limits.</td><td>Commercial retail uses are restricted to the ground level or first floor via active overlays.</td></tr>" +
-        "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules <br><span style='color:#0d9488; font-weight:bold;'>[✔️ MANDATORY]</span></td><td>Requires specific lot sizes for individual building types to proceed with parcel subdivisions.</td><td>Protects historic narrower rowhouses from redevelopment penalties.</td></tr>" +
+        "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules <br><span style='color:#0d9488; font-weight:bold;'>[✔️ MANDATORY]</span></td><td>Minimum lot size criteria determine absolute structural subdivide allowances.</td><td>Protects historic narrower rowhouses from redevelopment penalties.</td></tr>" +
         "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Residential Baseline FAR <br><span style='color:#4b5563; font-weight:bold;'>[⚙️ OPTIONAL]</span></td><td>Caps standard residential space at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF). Available for purely residential configurations.</td><td>Expanded tracks do not apply under baseline constraints.</td></tr>" +

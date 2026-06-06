@@ -3,158 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Pro Zoning Dual-Track Tracker</title>
-    <style>
-        :root {
-            --primary-color: #1e3a8a;
-            --primary-light: #eff6ff;
-            --accent-color: #0d9488;
-            --text-main: #1f2937;
-            --text-muted: #4b5563;
-            --bg-main: #f3f4f6;
-            --border-color: #e5e7eb;
-            --mandatory-color: #ef4444;
-        }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { background-color: var(--primary-color); color: white; padding: 20px 0; margin-bottom: 24px; text-align: center; border-radius: 6px; }
-        header h1 { margin: 0; font-size: 1.6rem; }
-        .subtitle { margin: 4px 0 0 0; opacity: 0.85; font-size: 0.9rem; }
-        .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary-color); border-bottom: 2px solid var(--primary-light); padding-bottom: 6px; }
-        p { font-size: 0.85rem; color: var(--text-muted); margin-top: -4px; }
-        
-        .search-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-top: 15px; }
-        .bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
-        
-        select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
-        select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
-        
-        button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
-        button:hover { background-color: #0f766e; }
-        
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
-        .info-item { padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem; }
-        .info-item strong { display: block; color: var(--primary-color); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; font-size: 0.85rem; }
-        th { background-color: var(--primary-light); color: var(--primary-color); padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
-        td { padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; }
-        tr:hover { background-color: #f9fafb; }
-        
-        .metric-box { background-color: #fff; border: 2px solid var(--border-color); border-radius: 6px; padding: 15px; text-align: center; }
-        .metric-val { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
-        .metric-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: bold; }
-        
-        #liveLog { display: none; padding: 12px; background-color: #fee2e2; border-left: 4px solid var(--mandatory-color); color: #991b1b; font-size: 0.85rem; border-radius: 4px; margin-top: 15px; }
-    </style>
+    <title>NYC Pro Zoning BBL Analysis Tool</title>
 </head>
-<body>
+<body style="font-family: Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; margin: 0; padding: 20px;">
 
-    <div class="container">
-        <header>
-            <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Dual Search Engine: Sandbox Address & Tax Lot Calculator</p>
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <header style="background-color: #1e3a8a; color: white; padding: 20px; margin-bottom: 24px; text-align: center; border-radius: 6px;">
+            <h1 style="margin: 0; font-size: 1.6rem;">NYC Zoning Cross-Reference App</h1>
+            <p style="margin: 4px 0 0 0; opacity: 0.85; font-size: 0.9rem;">Tax Lot BBL Data Engine: Live Sandbox Mode</p>
         </header>
 
-        <!-- Input Panel Section -->
-        <div class="card">
-            <h2>1. Select Property Query Path (Address or BBL)</h2>
-            <p>Search via street address line OR enter direct tax parcel numbers below:</p>
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+            <h2 style="margin-top: 0; font-size: 1.2rem; color: #1e3a8a;">1. Enter Property Tax Map Identifiers</h2>
+            <p style="font-size: 0.85rem; color: #4b5563; margin-top: -4px;">The fields below are pre-loaded with your Queens baseline data. Click the button directly to check execution:</p>
             
-            <div class="search-grid">
-                <!-- Track A: Address Input Panel -->
-                <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
-                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
-                    <div style="margin-top: 10px;">
-                        <input type="text" id="addressInput" placeholder="e.g. 54-11 Queens Boulevard" value="54-11 Queens Boulevard">
-                    </div>
-                    <button type="button" id="addressBtn">Search Address Profile</button>
-                </div>
-                
-                <!-- Track B: BBL Input Panel -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 10px;">
                 <div>
-                    <strong style="font-size: 0.85rem; color: var(--primary-color);">Option B: Search by Borough/Block/Lot</strong>
-                    <div class="bbl-box">
-                        <div>
-                            <select id="boroughInput">
-                                <option value="1">1 - Manhattan</option>
-                                <option value="2">2 - Bronx</option>
-                                <option value="3">3 - Brooklyn</option>
-                                <option value="4" selected>4 - Queens</option>
-                                <option value="5">5 - Staten Island</option>
-                            </select>
-                        </div>
-                        <div>
-                            <input type="text" id="blockInput" placeholder="Block" value="1323">
-                        </div>
-                        <div>
-                            <input type="text" id="lotInput" placeholder="Lot" value="44">
-                        </div>
-                    </div>
-                    <button type="button" id="bblBtn">Search BBL Profile</button>
+                    <select id="boroughInput" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
+                        <option value="1">1 - Manhattan</option>
+                        <option value="2">2 - Bronx</option>
+                        <option value="3">3 - Brooklyn</option>
+                        <option value="4" selected>4 - Queens</option>
+                        <option value="5">5 - Staten Island</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="text" id="blockInput" placeholder="Block" value="1323" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <div>
+                    <input type="text" id="lotInput" placeholder="Lot" value="44" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <div>
+                    <!-- SYNCHRONIZED ELEMENT BUTTON HOOK -->
+                    <button type="button" id="searchBtn" style="background-color: #0d9488; color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%;">Run BBL Query</button>
                 </div>
             </div>
-            
-            <div id="liveLog"></div>
+            <div id="liveLog" style="display: none; padding: 12px; background-color: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; font-size: 0.85rem; border-radius: 4px; margin-top: 15px;"></div>
         </div>
 
-        <!-- Display Workspace Sheets -->
         <div id="resultsWrapper" style="display: none;">
-            <div class="card">
-                <h2>2. Active ZoLa Site Parameters</h2>
-                <div class="info-grid">
-                    <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
-                    <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
-                    <div class="info-item"><strong>Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
-                    <div class="info-item"><strong>Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
-                    <div class="info-item"><strong>Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
-                    <div class="info-item"><strong>Lot Square Footage:</strong> <span id="infoLotArea">-</span></div>
+            <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+                <h2 style="margin-top: 0; font-size: 1.2rem; color: #1e3a8a;">2. Active ZoLa Site Parameters</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px;">
+                    <div style="padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase;">Retrieved Location:</strong> <span id="infoAddress">-</span></div>
+                    <div style="padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase;">Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
+                    <div style="padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase;">Zoning District Profile:</strong> <span id="infoZoning">-</span></div>
+                    <div style="padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase;">Commercial Overlay:</strong> <span id="infoOverlay">-</span></div>
+                    <div style="padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase;">Special District Identifier:</strong> <span id="infoSpecial">-</span></div>
+                    <div style="padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase;">Lot Square Footage:</strong> <span id="infoLotArea">-</span></div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
-                    <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
-                        <div class="metric-label">Standard Baseline FAR</div>
-                        <div class="metric-val" id="lblStdFar">-</div>
+            <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+                <h2 style="margin-top: 0; font-size: 1.2rem; color: #1e3a8a;">3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
+                    <div style="background-color: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 15px; text-align: center; border-left: 5px solid #1e3a8a;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #4b5563; font-weight: bold;">Standard Baseline FAR</div>
+                        <div style="font-size: 1.4rem; font-weight: bold; color: #1e3a8a; margin-top: 5px;" id="lblStdFar">-</div>
                         <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
                     </div>
-                    <div class="metric-box" style="border-left: 5px solid #0d9488;">
-                        <div class="metric-label">UAP Affordable Housing FAR</div>
-                        <div class="metric-val" id="lblUapFar">-</div>
+                    <div style="background-color: #fff; border: 2px solid #e5e7eb; border-radius: 6px; padding: 15px; text-align: center; border-left: 5px solid #0d9488;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #4b5563; font-weight: bold;">UAP Affordable Housing FAR</div>
+                        <div style="font-size: 1.4rem; font-weight: bold; color: #1e3a8a; margin-top: 5px;" id="lblUapFar">-</div>
                         <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>4. Complete Use Group Allowance Matrix</h2>
-                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-                    <div class="info-item" style="background: white; border-color: #1e3a8a;">
-                        <strong style="color: #1e3a8a;">🏠 Allowed Residential Uses</strong>
-                        <div id="resUseText" style="margin-top: 6px; color: #374151;">-</div>
-                    </div>
-                    <div class="info-item" style="background: white; border-color: #0d9488;">
-                        <strong style="color: #0d9488;">🏥 Allowed Community Facility Uses</strong>
-                        <div id="cfUseText" style="margin-top: 6px; color: #374151;">-</div>
-                    </div>
-                    <div class="info-item" style="background: white; border-color: #f59e0b;">
-                        <strong style="color: #f59e0b;">🏭 Allowed Commercial Uses</strong>
-                        <div id="commUseText" style="margin-top: 6px; color: #374151;">-</div>
-                    </div>
+            <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+                <h2 style="margin-top: 0; font-size: 1.2rem; color: #1e3a8a;">4. Complete Use Group Allowance Matrix</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                    <div style="padding: 12px; background-color: #fff; border: 1px solid #e5e7eb; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #1e3a8a; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 4px;">🏠 Allowed Residential Uses</strong><div id="resUseText">-</div></div>
+                    <div style="padding: 12px; background-color: #fff; border: 1px solid #e5e7eb; border-left: 4px solid #0d9488; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #0d9488; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 4px;">🏥 Allowed Community Facility Uses</strong><div id="cfUseText">-</div></div>
+                    <div style="padding: 12px; background-color: #fff; border: 1px solid #e5e7eb; border-left: 4px solid #f59e0b; border-radius: 4px; font-size: 0.9rem;"><strong style="display: block; color: #f59e0b; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 4px;">🏭 Allowed Commercial / Overlay Uses</strong><div id="commUseText">-</div></div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
-                <table>
+            <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+                <h2 style="margin-top: 0; font-size: 1.2rem; color: #1e3a8a;">5. Bulk Parameter, Envelope, & Special District Guide</h2>
+                <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; font-size: 0.85rem;">
                     <thead>
-                        <tr>
-                            <th width="15%">ZR Citation</th>
-                            <th width="20%">Zoning Parameter</th>
-                            <th width="32%">Standard Baseline Path</th>
-                            <th width="33%">Bonus / Contextual Path</th>
+                        <tr style="background-color: #eff6ff; color: #1e3a8a;">
+                            <th style="padding: 10px; border: 1px solid #e5e7eb;" width="15%">ZR Citation</th>
+                            <th style="padding: 10px; border: 1px solid #e5e7eb;" width="20%">Zoning Parameter</th>
+                            <th style="padding: 10px; border: 1px solid #e5e7eb;" width="32%">Standard Baseline Path</th>
+                            <th style="padding: 10px; border: 1px solid #e5e7eb;" width="33%">Bonus / Contextual Path</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -163,6 +96,5 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
 </body>
 </html>

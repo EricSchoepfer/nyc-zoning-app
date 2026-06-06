@@ -27,7 +27,6 @@ const zoningDictionary = {
     "R8": { stdFar: 6.02, uapFar: 7.20, cfFar: 6.50, resUses: "High-Density Urban Apartments, tower or high-bulk layouts.", cfUses: "Hospitals, full non-profit complexes, universities." },
     "R10": { stdFar: 10.00, uapFar: 12.00, cfFar: 10.00, resUses: "Maximum Density Urban Residential Towers.", cfUses: "Full hospitals, research libraries, community headquarters." },
     "C4": { stdFar: 3.40, uapFar: 4.00, cfFar: 4.80, resUses: "Mixed-use commercial-residential variants inside clusters.", cfUses: "Ambulatory care assets, local training spaces." },
-    "C4-6": { stdFar: 10.00, uapFar: 12.00, cfFar: 10.00, resUses: "High-Bulk Commercial Skyscraper Core.", cfUses: "Institutional assets, medical research towers." },
     "M1": { stdFar: 1.00, uapFar: 1.00, cfFar: 2.40, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard community facilities and custom public uses." }
 };
 
@@ -75,8 +74,6 @@ function showLiveLog(msg) {
 function hideLiveLog() { document.getElementById("liveLog").style.display = "none"; }
 
 function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address) {
-    document.getElementById("resultsWrapper").style.display = "block";
-    
     document.getElementById("infoAddress").innerText = address;
     document.getElementById("infoBbl").innerText = bbl;
     document.getElementById("infoZoning").innerText = zoning;
@@ -95,9 +92,6 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address
     
     document.getElementById("lblUapFar").innerText = lookup.uapFar.toFixed(2) + " FAR";
     document.getElementById("lblUapMaxSf").innerText = "Max Capacity: " + uapMaxZfa.toLocaleString() + " ZFA SF";
-
-    document.getElementById("lblCfFar").innerText = lookup.cfFar.toFixed(2) + " FAR";
-    document.getElementById("lblCfMaxSf").innerText = "Max Capacity: " + cfMaxZfa.toLocaleString() + " ZFA SF";
 
     document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
     document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
@@ -118,7 +112,9 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address
         specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + special + "):</b> Custom setbacks take priority.";
     }
 
+    // TAILORED DYNAMIC COMPILER: Injects community facility allocations and mandatory/optional metrics inside the original 4 columns cleanly
     document.getElementById("tableBody").innerHTML = 
-        "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Residential and Community Facility footprints can expand across full floorplates up to maximum zoning envelope limits.</td><td>Commercial retail uses are restricted to the ground level or first floor via active overlays.</td><td><span style='color:#0d9488; font-weight:bold;'>✔️ MANDATORY</span></td></tr>" +
-        "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Requires specific lot sizes for individual building types to proceed with parcel subdivisions.</td><td>Protects historic narrower rowhouses from redevelopment penalties.</td><td><span style='color:#0d9488; font-weight:bold;'>✔️ MANDATORY</span></td></tr>" +
-        "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Residential Baseline Max</td><td>Caps standard residential space at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " SF). Restricts building to standard floor area tracks.</td><td>Expanded tracks do not apply under standard baseline parameters.</td><td><span style='color:#4b5563; font-weight:bold;'>⚙️ OPTIONAL</span></td></tr>" +
+        "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right <br><span style='color:#0d9488; font-weight:bold;'>[✔️ MANDATORY]</span></td><td>Standalone residential and community facility options govern land parcel footprints.</td><td>Commercial retail configurations are restricted via active overlays.</td></tr>" +
+        "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules <br><span style='color:#0d9488; font-weight:bold;'>[✔️ MANDATORY]</span></td><td>Minimum lot size criteria determine absolute structural subdivide allowances.</td><td>Contextual profiles protect pre-existing historic narrower building footprints.</td></tr>" +
+        "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Residential Baseline FAR <br><span style='color:#4b5563; font-weight:bold;'>[⚙️ OPTIONAL]</span></td><td>Caps standard residential space at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " Max SF). Available for purely residential configurations.</td><td>Expanded tracks do not apply under baseline constraints.</td></tr>" +
+        "<tr><td><b>ZR 23-22 / UAP</b></td><td>UAP Housing Bonus <br><span style='color:#4b5563; font-weight:bold;'>[⚙️ OPTIONAL]</span></td><td>Baseline parameters apply; no housing bonus parameters are initialized.</td><td>Allows an expanded density of <b>" + lookup.uapFar.toFixed(2) + " FAR</b> (" + uapMaxZfa.toLocaleString() + " Max SF) if dedicated inclusionary housing is provided.</td></tr>" +

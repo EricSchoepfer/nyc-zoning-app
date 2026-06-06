@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC Pro Zoning Dual-Track Tracker</title>
-    <!-- Lightweight Geospatial Data Pipeline Hook -->
-    <script src="https://jquery.com"></script>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -55,27 +53,27 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Universal Analytics Platform: Auto-Query Real-Time Interactive Explorer</p>
+            <p class="subtitle">Dual Search Engine: Sandbox Address & Tax Lot Calculator</p>
         </header>
 
-        <!-- Input Section -->
+        <!-- Input Panel Section -->
         <div class="card">
-            <h2>1. Enter Property Search Target (Address or Direct BBL)</h2>
-            <p>Type any real location. The engine automatically computes plot areas and extracts citations:</p>
+            <h2>1. Select Property Query Path (Address or BBL)</h2>
+            <p>Search via street address line OR enter direct tax parcel numbers below:</p>
             
             <div class="search-grid">
-                <!-- Track A: Street Address Line Search -->
+                <!-- Track A: Address Input Panel -->
                 <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
-                    <strong style="font-size: 0.85rem; color: var(--primary-color);">Option A: Search by Street Address</strong>
+                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
                     <div style="margin-top: 10px;">
                         <input type="text" id="addressInput" placeholder="e.g. 54-11 Queens Boulevard" value="54-11 Queens Boulevard">
                     </div>
                     <button type="button" id="addressBtn">Search Address Profile</button>
                 </div>
                 
-                <!-- Track B: Direct Tax Map Selectors -->
+                <!-- Track B: BBL Input Panel -->
                 <div>
-                    <strong style="font-size: 0.85rem; color: var(--primary-color);">Option B: Search by Borough/Block/Lot</strong>
+                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option B: Search by Borough/Block/Lot</strong>
                     <div class="bbl-box">
                         <div>
                             <select id="boroughInput">
@@ -100,12 +98,10 @@
             <div id="liveLog"></div>
         </div>
 
-        <!-- Display Layout Workspace Sheets -->
+        <!-- Display Workspace Sheets -->
         <div id="resultsWrapper" style="display: none;">
-            
-            <!-- Parameters Panel -->
             <div class="card">
-                <h2>2. Active ZoLa Site Parameters (Live Real-Time Data)</h2>
+                <h2>2. Active ZoLa Site Parameters</h2>
                 <div class="info-grid">
                     <div class="info-item"><strong>Retrieved Location:</strong> <span id="infoAddress">-</span></div>
                     <div class="info-item"><strong>Mapped 10-Digit BBL:</strong> <span id="infoBbl">-</span></div>
@@ -116,30 +112,22 @@
                 </div>
             </div>
 
-            <!-- FIXED: Dynamic Floor Area Ratio Metrics Output Dashboard Grid -->
             <div class="card">
                 <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 15px;">
-                    <div class="metric-box" style="border-left: 5px solid var(--primary-color);">
-                        <div class="metric-label">Residential Baseline FAR</div>
+                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
+                    <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
+                        <div class="metric-label">Standard Baseline FAR</div>
                         <div class="metric-val" id="lblStdFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblStdMaxSf">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
                     </div>
-                    <div class="metric-box" style="border-left: 5px solid var(--accent-color);">
-                        <div class="metric-label">UAP Housing FAR Bonus</div>
+                    <div class="metric-box" style="border-left: 5px solid #0d9488;">
+                        <div class="metric-label">UAP Affordable Housing FAR</div>
                         <div class="metric-val" id="lblUapFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblUapMaxSf">-</div>
-                    </div>
-                    <!-- ADDED VISUAL COMPONENT TRACK: Displays community facility parameters cleanly -->
-                    <div class="metric-box" style="border-left: 5px solid #f59e0b;">
-                        <div class="metric-label">Community Facility FAR</div>
-                        <div class="metric-val" id="lblCfFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblCfMaxSf">-</div>
+                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Use Permissions Panels -->
             <div class="card">
                 <h2>4. Complete Use Group Allowance Matrix</h2>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
@@ -153,3 +141,28 @@
                     </div>
                     <div class="info-item" style="background: white; border-color: #f59e0b;">
                         <strong style="color: #f59e0b;">🏭 Allowed Commercial Uses</strong>
+                        <div id="commUseText" style="margin-top: 6px; color: #374151;">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>5. Bulk Parameter, Envelope, & Special District Guide</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="15%">ZR Citation</th>
+                            <th width="20%">Zoning Parameter</th>
+                            <th width="32%">Standard Baseline Path</th>
+                            <th width="33%">Bonus / Contextual Path</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

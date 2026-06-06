@@ -1,41 +1,125 @@
-:root {
-    --primary-color: #1e3a8a;
-    --primary-light: #eff6ff;
-    --accent-color: #0d9488;
-    --text-main: #1f2937;
-    --text-muted: #4b5563;
-    --bg-main: #f3f4f6;
-    --border-color: #e5e7eb;
-    --mandatory-color: #ef4444;
+const sandboxRegistry = {
+    "4013230044": { address: "54-11 QUEENS BOULEVARD", zoning: "R7X", overlay: "C2-3", special: "None", lotArea: 10180 },
+    "54-11 QUEENS BOULEVARD": { address: "54-11 QUEENS BOULEVARD", bbl: "4013230044", zoning: "R7X", overlay: "C2-3", special: "None", lotArea: 10180 },
+    
+    "1000290001": { address: "26 BROADWAY", zoning: "C4-6", overlay: "None", special: "Special Midtown District (MiD)", lotArea: 77329 },
+    "26 BROADWAY": { address: "26 BROADWAY", bbl: "1000290001", zoning: "C4-6", overlay: "None", special: "Special Midtown District (MiD)", lotArea: 77329 },
+    
+    "3019640001": { address: "124 GRAND AVENUE", zoning: "R7-1", overlay: "C2-4", special: "None", lotArea: 12500 },
+    "124 GRAND AVENUE": { address: "124 GRAND AVENUE", bbl: "3019640001", zoning: "R7-1", overlay: "C2-4", special: "None", lotArea: 12500 },
+
+    "3019640025": { address: "210 PARK PLACE", zoning: "R6B", overlay: "None", special: "None", lotArea: 2000 },
+    "210 PARK PLACE": { address: "210 PARK PLACE", bbl: "3019640025", zoning: "R6B", overlay: "None", special: "None", lotArea: 2000 }
+};
+
+const zoningDictionary = {
+    "R1": { stdFar: 0.50, uapFar: 0.50, cfFar: 1.00, resUses: "Single-Family Detached Residences.", cfUses: "Basic neighborhood community facilities, houses of worship." },
+    "R2": { stdFar: 0.50, uapFar: 0.50, cfFar: 1.00, resUses: "Single-Family Detached Residences.", cfUses: "Basic neighborhood community facilities, houses of worship." },
+    "R3": { stdFar: 0.50, uapFar: 0.60, cfFar: 1.00, resUses: "Low-Rise Contextual Multi-Family Profiles.", cfUses: "Houses of worship, medical clinics, schools, clubs." },
+    "R4": { stdFar: 0.75, uapFar: 0.90, cfFar: 2.00, resUses: "Rowhouses and small multi-family garden apartments.", cfUses: "Local schools, houses of worship, medical clinics." },
+    "R5": { stdFar: 1.25, uapFar: 1.65, cfFar: 2.00, resUses: "Single/Two-Family Rowhouses and small apartments.", cfUses: "Houses of worship, medical offices, schools." },
+    "R6": { stdFar: 2.20, uapFar: 3.60, cfFar: 4.80, resUses: "Medium-Density Apartment complexes, Traditional Height Factor.", cfUses: "Schools, medical centers, libraries, community centers." },
+    "R6B": { stdFar: 2.00, uapFar: 2.20, cfFar: 2.00, resUses: "Traditional Contextual Low-Rise Rowhouses.", cfUses: "Neighborhood community assets, houses of worship." },
+    "R7": { stdFar: 3.44, uapFar: 4.60, cfFar: 4.80, resUses: "Medium-High Density Apartments, Quality Housing Framework.", cfUses: "Ambulatory healthcare services, full educational facilities." },
+    "R7-1": { stdFar: 3.44, uapFar: 4.60, cfFar: 4.80, resUses: "Medium-High Density Height Factor / Quality Housing Profile.", cfUses: "Ambulatory medical, educational facilities." },
+    "R7A": { stdFar: 4.00, uapFar: 4.60, cfFar: 4.00, resUses: "High-Density Quality Housing Contextual Profiles.", cfUses: "Ambulatory care assets, schools, libraries." },
+    "R7X": { stdFar: 5.00, uapFar: 6.00, cfFar: 5.00, resUses: "Contextual Multi-Family Envelopes. Strict front walls.", cfUses: "Medical facilities, schools, libraries, non-profit institutions." },
+    "R8": { stdFar: 6.02, uapFar: 7.20, cfFar: 6.50, resUses: "High-Density Urban Apartments, tower or high-bulk layouts.", cfUses: "Hospitals, full non-profit complexes, universities." },
+    "R10": { stdFar: 10.00, uapFar: 12.00, cfFar: 10.00, resUses: "Maximum Density Urban Residential Towers.", cfUses: "Full hospitals, research libraries, community headquarters." },
+    "C4": { stdFar: 3.40, uapFar: 4.00, cfFar: 4.80, resUses: "Mixed-use commercial-residential variants inside clusters.", cfUses: "Ambulatory care assets, local training spaces." },
+    "C4-6": { stdFar: 10.00, uapFar: 12.00, cfFar: 10.00, resUses: "High-Bulk Commercial Skyscraper Core.", cfUses: "Institutional assets, medical research towers." },
+    "M1": { stdFar: 1.00, uapFar: 1.00, cfFar: 2.40, resUses: "🚫 Standalone Residential Use prohibited.", cfUses: "Performance standard community facilities and custom public uses." }
+};
+
+document.getElementById("addressBtn").onclick = function() {
+    hideLiveLog();
+    var addressText = document.getElementById("addressInput").value;
+    if (!addressText || addressText.trim() === "") { alert("Please enter an address."); return; }
+    
+    var key = addressText.trim().toUpperCase();
+    var record = sandboxRegistry[key];
+    
+    if (record) {
+        processMetricsAndLayout(record.bbl, record.zoning, record.overlay, record.special, record.lotArea, record.address);
+    } else {
+        showLiveLog("Address not loaded in sandbox data table registry block.");
+    }
+};
+
+document.getElementById("bblBtn").onclick = function() {
+    hideLiveLog();
+    var boro = document.getElementById("boroughInput").value;
+    var blockRaw = document.getElementById("blockInput").value;
+    var lotRaw = document.getElementById("lotInput").value;
+    if (!boro || !blockRaw || blockRaw.trim() === "" || !lotRaw || lotRaw.trim() === "") { alert("Fill out BBL fields."); return; }
+    
+    var block = String(blockRaw.trim()).padStart(5, '0');
+    var lot = String(lotRaw.trim()).padStart(4, '0');
+    var computedBbl = boro + block + lot;
+    
+    var record = sandboxRegistry[computedBbl];
+    
+    if (record) {
+        processMetricsAndLayout(computedBbl, record.zoning, record.overlay, record.special, record.lotArea, record.address);
+    } else {
+        showLiveLog("BBL number identifier sequence not loaded in sandbox data table registry block.");
+    }
+};
+
+function showLiveLog(msg) {
+    var logger = document.getElementById("liveLog");
+    logger.innerText = "System Notice: " + msg;
+    logger.style.display = "block";
 }
-body { font-family: Arial, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; }
-.container { max-width: 1200px; margin: 0 auto; }
-header { background-color: var(--primary-color); color: white; padding: 20px 0; margin-bottom: 24px; text-align: center; border-radius: 6px; }
-header h1 { margin: 0; font-size: 1.6rem; }
-.subtitle { margin: 4px 0 0 0; opacity: 0.85; font-size: 0.9rem; }
-.card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary-color); border-bottom: 2px solid var(--primary-light); padding-bottom: 6px; }
-p { font-size: 0.85rem; color: var(--text-muted); margin-top: -4px; }
 
-.search-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-top: 15px; }
-.bbl-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
+function hideLiveLog() { document.getElementById("liveLog").style.display = "none"; }
 
-select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; outline: none; }
-select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
+function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address) {
+    document.getElementById("resultsWrapper").style.display = "block";
+    
+    document.getElementById("infoAddress").innerText = address;
+    document.getElementById("infoBbl").innerText = bbl;
+    document.getElementById("infoZoning").innerText = zoning;
+    document.getElementById("infoOverlay").innerText = overlay;
+    document.getElementById("infoSpecial").innerText = special;
+    document.getElementById("infoLotArea").innerText = lotArea.toLocaleString() + " SF";
 
-button { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
-button:hover { background-color: #0f766e; }
+    var lookup = zoningDictionary[zoning] || { stdFar: 2.00, uapFar: 2.40, cfFar: 2.00, resUses: "Housing allowed.", cfUses: "Facility allowed." };
+    
+    var stdMaxZfa = Math.round(lotArea * lookup.stdFar);
+    var uapMaxZfa = Math.round(lotArea * lookup.uapFar);
+    var cfMaxZfa = Math.round(lotArea * lookup.cfFar);
 
-.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
-.info-item { padding: 12px; background-color: #eff6ff; border-left: 4px solid #1e3a8a; border-radius: 4px; font-size: 0.9rem; }
-.info-item strong { display: block; color: var(--primary-color); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 2px; }
-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; font-size: 0.85rem; }
-th { background-color: var(--primary-light); color: var(--primary-color); padding: 10px; font-weight: bold; border: 1px solid #e5e7eb; }
-td { padding: 10px; border: 1px solid #e5e7eb; vertical-align: top; }
-tr:hover { background-color: #f9fafb; }
+    document.getElementById("lblStdFar").innerText = lookup.stdFar.toFixed(2) + " FAR";
+    document.getElementById("lblStdMaxSf").innerText = "Max Capacity: " + stdMaxZfa.toLocaleString() + " ZFA SF";
+    
+    document.getElementById("lblUapFar").innerText = lookup.uapFar.toFixed(2) + " FAR";
+    document.getElementById("lblUapMaxSf").innerText = "Max Capacity: " + uapMaxZfa.toLocaleString() + " ZFA SF";
 
-.metric-box { background-color: #fff; border: 2px solid var(--border-color); border-radius: 6px; padding: 15px; text-align: center; }
-.metric-val { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); margin-top: 5px; }
-.metric-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: bold; }
+    document.getElementById("lblCfFar").innerText = lookup.cfFar.toFixed(2) + " FAR";
+    document.getElementById("lblCfMaxSf").innerText = "Max Capacity: " + cfMaxZfa.toLocaleString() + " ZFA SF";
 
-#liveLog { display: none; padding: 12px; background-color: #fee2e2; border-left: 4px solid var(--mandatory-color); color: #991b1b; font-size: 0.85rem; border-radius: 4px; margin-top: 15px; }
+    document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
+    document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
+
+    // CRITICAL SAFETY BOUND FIX: Pull primary character safely without token loop deadlocks
+    var firstLetter = zoning ? zoning.charAt(0) : "R";
+    if (overlay !== "None" && overlay !== "") {
+        document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + overlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";
+    } else if (firstLetter === "C") {
+        document.getElementById("commUseText").innerHTML = "<b>Permitted (Commercial Zone):</b><br>Broad commercial retail operations allowed across all floorplates.";
+    } else if (firstLetter === "M") {
+        document.getElementById("commUseText").innerHTML = "<b>Permitted (Manufacturing Zone):</b><br>Allows automotive repair workshops, freight hubs, and warehouses.";
+    } else { 
+        document.getElementById("commUseText").innerHTML = "<b>🚫 Commercial Restricted:</b><br>No commercial overlay options exist. Retail is disallowed."; 
+    }
+
+    var specialNotice = "Standard underlying city-wide framework text rules apply.";
+    if (special !== "None" && special !== "") {
+        specialNotice = "<b style='color:#ef4444'>⚠️ Special District Active (" + special + "):</b> Custom setbacks take priority.";
+    }
+
+    document.getElementById("tableBody").innerHTML = 
+        "<tr><td><b>ZR 22-12 / 32-16</b></td><td>Uses Permitted As-Of-Right</td><td>Residential and Community Facility footprints can expand across full floorplates up to maximum zoning envelope limits.</td><td>Commercial retail uses are restricted to the ground level or first floor via active overlays.</td><td><span style='color:#0d9488; font-weight:bold;'>✔️ MANDATORY</span></td></tr>" +
+        "<tr><td><b>ZR 23-12</b></td><td>Lot Area & Width Rules</td><td>Requires specific lot sizes for individual building types to proceed with parcel subdivisions.</td><td>Protects historic narrower rowhouses from redevelopment penalties.</td><td><span style='color:#0d9488; font-weight:bold;'>✔️ MANDATORY</span></td></tr>" +
+        "<tr><td><b>ZR 23-22 / 34-111</b></td><td>Residential Baseline Max</td><td>Caps standard residential space at <b>" + lookup.stdFar.toFixed(2) + " FAR</b> (" + stdMaxZfa.toLocaleString() + " SF). Restricts building to standard floor area tracks.</td><td>Expanded tracks do not apply under standard baseline parameters.</td><td><span style='color:#4b5563; font-weight:bold;'>⚙️ OPTIONAL</span></td></tr>" +

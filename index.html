@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Pro Zoning Dual-Track Tracker</title>
+    <title>NYC Pro Zoning ZoLa Data Engine</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -53,18 +53,18 @@
     <div class="container">
         <header>
             <h1>NYC Zoning Cross-Reference App</h1>
-            <p class="subtitle">Dual Search Engine: Sandbox Address & Tax Lot Calculator</p>
+            <p class="subtitle">Live ZoLa Cloud Engine: Auto-Query Real-Time Universal Explorer</p>
         </header>
 
         <!-- Input Panel Section -->
         <div class="card">
-            <h2>1. Select Property Query Path (Address or BBL)</h2>
-            <p>Search via street address line OR enter direct tax parcel numbers below:</p>
+            <h2>1. Enter Live Property Target (Address or Direct BBL)</h2>
+            <p>Search using any real NYC location. The pipeline retrieves true tax lot area dimensions and zoning text rules immediately:</p>
             
             <div class="search-grid">
                 <!-- Track A: Address Input Panel -->
                 <div style="border-right: 1px solid #e5e7eb; padding-right: 20px;">
-                    <strong style="font-size: 0.85rem; color: #1e3a8a;">Option A: Search by Street Address</strong>
+                    <strong style="font-size: 0.85rem; color: var(--primary-color);">Option A: Search by Street Address</strong>
                     <div style="margin-top: 10px;">
                         <input type="text" id="addressInput" placeholder="e.g. 54-11 Queens Boulevard" value="54-11 Queens Boulevard">
                     </div>
@@ -112,17 +112,16 @@
                 </div>
             </div>
 
-            <!-- Dashboard Boxes Including Community Facility Requirements -->
             <div class="card">
                 <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
                 <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 15px;">
                     <div class="metric-box" style="border-left: 5px solid var(--primary-color);">
-                        <div class="metric-label">Standard Baseline FAR</div>
+                        <div class="metric-label">Residential Baseline FAR</div>
                         <div class="metric-val" id="lblStdFar">-</div>
                         <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
                     </div>
                     <div class="metric-box" style="border-left: 5px solid #0d9488;">
-                        <div class="metric-label">UAP Affordable Housing FAR</div>
+                        <div class="metric-label">UAP Housing FAR Bonus</div>
                         <div class="metric-val" id="lblUapFar">-</div>
                         <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
                     </div>

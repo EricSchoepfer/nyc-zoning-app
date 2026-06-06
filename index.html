@@ -113,20 +113,26 @@
             </div>
 
             <div class="card">
-                <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
-                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 15px;">
-                    <div class="metric-box" style="border-left: 5px solid #1e3a8a;">
-                        <div class="metric-label">Standard Baseline FAR</div>
-                        <div class="metric-val" id="lblStdFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblStdMaxSf">-</div>
-                    </div>
-                    <div class="metric-box" style="border-left: 5px solid #0d9488;">
-                        <div class="metric-label">UAP Affordable Housing FAR</div>
-                        <div class="metric-val" id="lblUapFar">-</div>
-                        <div style="font-size:0.8rem; margin-top:4px; color:#4b5563;" id="lblUapMaxSf">-</div>
-                    </div>
-                </div>
-            </div>
+    <h2>3. Calculated Floor Area Allowances (ZFA Breakdown)</h2>
+    <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 15px;">
+        <div class="metric-box" style="border-left: 5px solid var(--primary-color);">
+            <div class="metric-label">Residential Baseline FAR</div>
+            <div class="metric-val" id="lblStdFar">-</div>
+            <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblStdMaxSf">-</div>
+        </div>
+        <div class="metric-box" style="border-left: 5px solid var(--accent-color);">
+            <div class="metric-label">UAP Housing FAR Bonus</div>
+            <div class="metric-val" id="lblUapFar">-</div>
+            <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblUapMaxSf">-</div>
+        </div>
+        <div class="metric-box" style="border-left: 5px solid #f59e0b;">
+            <div class="metric-label">Community Facility FAR</div>
+            <div class="metric-val" id="lblCfFar">-</div>
+            <div style="font-size:0.8rem; margin-top:4px; color:var(--text-muted);" id="lblCfMaxSf">-</div>
+        </div>
+    </div>
+</div>
+
 
             <div class="card">
                 <h2>4. Complete Use Group Allowance Matrix</h2>

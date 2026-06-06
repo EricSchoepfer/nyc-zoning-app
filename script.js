@@ -102,7 +102,6 @@ function processMetricsAndLayout(bbl, zoning, overlay, special, lotArea, address
     document.getElementById("resUseText").innerHTML = "<b>Permitted (Residences):</b><br>" + lookup.resUses;
     document.getElementById("cfUseText").innerHTML = "<b>Permitted (Community Facilities):</b><br>" + lookup.cfUses;
 
-    // CRITICAL SAFETY BOUND FIX: Pull primary character safely without token loop deadlocks
     var firstLetter = zoning ? zoning.charAt(0) : "R";
     if (overlay !== "None" && overlay !== "") {
         document.getElementById("commUseText").innerHTML = "<b>Permitted via Overlay (" + overlay + "):</b><br>Allows ground floor local retail stores (<b>Use Group VI</b>).";

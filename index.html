@@ -34,8 +34,7 @@
                     <input type="text" id="lotInput" placeholder="Lot" value="44" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
                 </div>
                 <div>
-                    <!-- SYNCHRONIZED ELEMENT BUTTON HOOK -->
-                    <button type="button" id="searchBtn" style="background-color: #0d9488; color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%;">Run BBL Query</button>
+                    <button type="button" id="searchBtn" onclick="triggerBblLookup()" style="background-color: #0d9488; color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%;">Run BBL Query</button>
                 </div>
             </div>
             <div id="liveLog" style="display: none; padding: 12px; background-color: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; font-size: 0.85rem; border-radius: 4px; margin-top: 15px;"></div>
@@ -96,5 +95,7 @@
         </div>
     </div>
 
-</body>
-</html>
+    <script>
+        const sandboxRegistry = {
+            "4013230044": { address: "54-11 QUEENS BOULEVARD", zoning: "R7X", overlay: "C2-3", special: "None", lotArea: 10180 },
+            "1000290001": { address: "26 BROADWAY", zoning: "C4-6", overlay: "None", special: "Special Midtown District (MiD)", lotArea: 77329 },
